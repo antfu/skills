@@ -1,0 +1,4 @@
+- Prefer using TypeScript over JavaScript.
+- Use `storeToRefs` when destructuring state from stores to maintain reactivity.
+- Prefer smaller, focused stores over large monolithic stores.
+- Keep API calls in separate composable functions rather than embedding them directly within store actions.

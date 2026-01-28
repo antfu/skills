@@ -1,0 +1,5 @@
+- Prefer using TypeScript over JavaScript.
+- Prefer in-source testing (`if (import.meta.vitest)`) for utility functions.
+- Use `vi.mock` for mocking modules.
+- Prefer `describe` and `it` over `test` for better readability.
+- Use `expect.soft` for non-critical assertions that shouldn't stop the test.

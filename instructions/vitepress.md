@@ -1,0 +1,4 @@
+- Prefer using TypeScript over JavaScript.
+- Prefer using `config.mts` for configuration file.
+- Use frontmatter for page-level configuration.
+- Prefer Vue components over raw HTML for custom layouts and theme customization.
