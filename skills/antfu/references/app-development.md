@@ -51,9 +51,9 @@ interface Emits {
   (e: 'close'): void
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  count: 0,
-})
+const {
+  count = 0
+} = defineProps<Props>()
 
 const emit = defineEmits<Emits>()
 </script>
