@@ -1,6 +1,6 @@
 ---
 name: antfu
-description: Anthony Fu's coding preferences and best practices for JavaScript/TypeScript projects
+description: Anthony Fu's {Opinionated} preferences and best practices for web development
 metadata:
   author: Anthony Fu
   version: "2026.1.28"
@@ -8,7 +8,7 @@ metadata:
 
 # Anthony Fu's Preferences
 
-This skill covers Anthony Fu's preferred tooling, configurations, and best practices for JavaScript/TypeScript projects.
+This skill covers Anthony Fu's preferred tooling, configurations, and best practices for web development. This skill is opinionated.
 
 ## Quick Summary
 
