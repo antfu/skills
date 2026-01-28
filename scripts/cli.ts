@@ -291,8 +291,9 @@ async function checkUpdates() {
       continue
 
     const behind = execSafe('git rev-list HEAD..@{u} --count', path)
-    if (behind && Number.parseInt(behind) > 0) {
-      updates.push({ name, type: 'source', behind: Number.parseInt(behind) })
+    const count = behind ? Number.parseInt(behind) : 0
+    if (count > 0) {
+      updates.push({ name, type: 'source', behind: count })
     }
   }
 
@@ -304,9 +305,10 @@ async function checkUpdates() {
       continue
 
     const behind = execSafe('git rev-list HEAD..@{u} --count', path)
-    if (behind && Number.parseInt(behind) > 0) {
+    const count = behind ? Number.parseInt(behind) : 0
+    if (count > 0) {
       const skillNames = Object.values(vendorConfig.skills).join(', ')
-      updates.push({ name: `${name} (${skillNames})`, type: 'vendor', behind: Number.parseInt(behind) })
+      updates.push({ name: `${name} (${skillNames})`, type: 'vendor', behind: count })
     }
   }
 
