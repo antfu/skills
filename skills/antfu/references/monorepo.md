@@ -28,7 +28,7 @@ Enable ESLint cache for faster linting in monorepos.
   "scripts": {
     "build": "pnpm run -r build",
     "test": "vitest",
-    "lint": "eslint . --cache"
+    "lint": "eslint . --cache --concurrency=auto"
   }
 }
 ```
@@ -51,7 +51,7 @@ In each package's `package.json`, add the scripts.
 ```json
 {
   "scripts": {
-    "lint": "eslint . --cache"
+    "lint": "eslint . --cache --concurrency=auto"
   }
 }
 ```
