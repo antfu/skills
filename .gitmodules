@@ -1,6 +1,6 @@
 [submodule "sources/vue"]
 	path = sources/vue
-	url = https://github.com/vuejs/core
+	url = https://github.com/vuejs/docs
 [submodule "sources/nuxt"]
 	path = sources/nuxt
 	url = https://github.com/nuxt/nuxt
