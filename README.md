@@ -61,9 +61,9 @@ If you want to generate your own skill sets like this, you can use this project 
 1. Fork or clone this repository
 2. Install dependencies: `pnpm install`
 3. Update `meta.ts` to add your own projects and skills.
-4. Run `nr sync cleanup` to remove the existing submodules and skills.
-5. Run `nr sync init` to clone the submodules.
-6. Run `nr sync sync` to sync the vendored skills.
+4. Run `nr start cleanup` to remove the existing submodules and skills.
+5. Run `nr start init` to clone the submodules.
+6. Run `nr start sync` to sync the vendored skills.
 7. Use your agent to ask "generate skills for <project>" to generate the skills. It's recommended to do it one-by-one as this might consume quite a lot of tokens.
 
 See [AGENTS.md](AGENTS.md) for detailed generation guidelines.

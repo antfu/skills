@@ -3,7 +3,7 @@
   "packageManager": "pnpm@10.28.2",
   "scripts": {
     "lint": "eslint .",
-    "sync": "tsx scripts/sync.ts",
+    "start": "tsx scripts/cli.ts",
     "prepare": "simple-git-hooks && git submodule update --init --recursive"
   },
   "devDependencies": {
