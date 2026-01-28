@@ -3,7 +3,7 @@ name: pnpm
 description: Fast, disk space efficient package manager for Node.js with strict dependency resolution and monorepo support
 metadata:
   author: Anthony Fu
-  version: "2025.1.28"
+  version: "2026.1.28"
   source: Generated from https://github.com/pnpm/pnpm, scripts located at https://github.com/antfu/skills
 ---
 

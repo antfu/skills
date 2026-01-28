@@ -3,7 +3,7 @@ name: tsdown
 description: tsdown is a fast and elegant TypeScript library bundler powered by Rolldown and Oxc
 metadata:
   author: Anthony Fu
-  version: "2025.1.28"
+  version: "2026.1.28"
   source: Generated from https://github.com/rolldown/tsdown, scripts located at https://github.com/antfu/skills
 ---
 

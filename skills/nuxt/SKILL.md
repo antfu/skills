@@ -3,7 +3,7 @@ name: nuxt
 description: Nuxt is a Vue.js framework for building full-stack web applications with SSR, auto-imports, file-based routing, and hybrid rendering
 metadata:
   author: Anthony Fu
-  version: "2025.1.28"
+  version: "2026.1.28"
   source: Generated from https://github.com/nuxt/nuxt, scripts located at https://github.com/antfu/skills
 ---
 

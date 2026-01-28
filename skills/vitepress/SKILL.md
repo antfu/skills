@@ -3,7 +3,7 @@ name: vitepress
 description: Vite & Vue powered static site generator for building fast, content-centric websites
 metadata:
   author: Anthony Fu
-  version: "2025.1.28"
+  version: "2026.1.28"
   source: Generated from https://github.com/vuejs/vitepress, scripts located at https://github.com/antfu/skills
 ---
 

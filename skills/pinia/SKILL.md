@@ -3,7 +3,7 @@ name: pinia
 description: The intuitive store for Vue - type-safe, extensible, and modular state management
 metadata:
   author: Anthony Fu
-  version: "2025.1.28"
+  version: "2026.1.28"
   source: Generated from https://github.com/vuejs/pinia, scripts located at https://github.com/antfu/skills
 ---
 
@@ -11,7 +11,7 @@ metadata:
 
 Pinia is the official state management library for Vue, designed to be intuitive and type-safe. It supports both Options API and Composition API styles, with first-class TypeScript support and devtools integration.
 
-> The skill is based on Pinia v3.0.4, generated at 2025-01-28.
+> The skill is based on Pinia v3.0.4, generated at 2026-01-28.
 
 ## Core References
 

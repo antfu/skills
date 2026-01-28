@@ -3,7 +3,7 @@ name: unocss
 description: Instant on-demand atomic CSS engine - fully customizable, powerful, fast, and joyful
 metadata:
   author: Anthony Fu
-  version: "2025.1.28"
+  version: "2026.1.28"
   source: Generated from https://github.com/unocss/unocss, scripts located at https://github.com/antfu/skills
 ---
 

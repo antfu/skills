@@ -3,7 +3,7 @@ name: vitest
 description: A blazing fast unit testing framework powered by Vite
 metadata:
   author: Anthony Fu
-  version: "2025.1.28"
+  version: "2026.1.28"
   source: Generated from https://github.com/vitest-dev/vitest, scripts located at https://github.com/antfu/skills
 ---
 

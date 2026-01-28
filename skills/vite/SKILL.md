@@ -3,7 +3,7 @@ name: vite
 description: Vite is a next-generation frontend build tool that provides a fast dev server with HMR and optimized production builds
 metadata:
   author: Anthony Fu
-  version: "2025.1.28"
+  version: "2026.1.28"
   source: Generated from https://github.com/vitejs/vite, scripts located at https://github.com/antfu/skills
 ---
 

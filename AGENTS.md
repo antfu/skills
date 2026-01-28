@@ -141,7 +141,7 @@ name: {name}
 description: {description}
 metadata:
   author: Anthony Fu
-  version: "2025.1.1"
+  version: "2026.1.1"
   source: Generated from {source-url}, scripts located at https://github.com/antfu/skills
 ---
 

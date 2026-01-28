@@ -3,7 +3,7 @@ name: vue
 description: Vue.js - The Progressive JavaScript Framework for building user interfaces
 metadata:
   author: Anthony Fu
-  version: "2025.1.28"
+  version: "2026.1.28"
   source: Generated from https://github.com/vuejs/docs, scripts located at https://github.com/antfu/skills
 ---
 
