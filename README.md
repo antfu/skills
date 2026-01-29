@@ -74,12 +74,15 @@ The project is also designed to be flexible - you can use it as a template to ge
 
 Fork this project to create your own customized skill collection.
 
+> [!NOTE]
+> `nr` is provided by [`@antfu/ni`](https://github.com/antfu/ni). Install it globally: `npm i -g @antfu/ni`.
+
 1. Fork or clone this repository
 2. Install dependencies: `pnpm install`
 3. Update `meta.ts` with your own projects and skill sources
-4. Run `nr start cleanup` to remove existing submodules and skills
-5. Run `nr start init` to clone the submodules
-6. Run `nr start sync` to sync vendored skills
+4. Run `nr start cleanup` (or `pnpm start cleanup`) to remove existing submodules and skills
+5. Run `nr start init` (or `pnpm start init`) to clone the submodules
+6. Run `nr start sync` (or `pnpm start sync`) to sync vendored skills
 7. Ask your agent to "generate skills for \<project\>" (recommended one at a time to manage token usage)
 
 See [AGENTS.md](AGENTS.md) for detailed generation guidelines.
