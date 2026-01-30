@@ -2,8 +2,7 @@ shellEmulator: true
 
 trustPolicy: no-downgrade
 
-packages:
-  - . # TODO add for running `pnpm i` correctly for now, if it's not added, `pnpm i` will fail. Remove it when planning to add real workspace packages.
+packages: []
 
 onlyBuiltDependencies:
   - esbuild
