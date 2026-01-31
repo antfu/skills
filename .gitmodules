@@ -16,12 +16,6 @@
 [submodule "vendor/vueuse"]
 	path = vendor/vueuse
 	url = https://github.com/vueuse/skills
-[submodule "vendor/vue-best-practices"]
-	path = vendor/vue-best-practices
-	url = https://github.com/hyf0/vue-skills
-[submodule "sources/tsdown"]
-	path = sources/tsdown
-	url = https://github.com/rolldown/tsdown
 [submodule "sources/vitest"]
 	path = sources/vitest
 	url = https://github.com/vitest-dev/vitest
@@ -40,3 +34,9 @@
 [submodule "sources/pinia"]
 	path = sources/pinia
 	url = https://github.com/vuejs/pinia
+[submodule "vendor/tsdown"]
+	path = vendor/tsdown
+	url = https://github.com/rolldown/tsdown
+[submodule "vendor/vuejs-ai"]
+	path = vendor/vuejs-ai
+	url = https://github.com/vuejs-ai/skills

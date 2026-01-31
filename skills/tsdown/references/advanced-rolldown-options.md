@@ -1,19 +1,18 @@
----
-name: advanced-rolldown-options
-description: Customizing Rolldown inputOptions and outputOptions in tsdown
----
-
 # Customizing Rolldown Options
 
-tsdown exposes Rolldown's `inputOptions` and `outputOptions` for fine-grained control.
+Pass options directly to the underlying Rolldown bundler.
 
-## Overriding inputOptions
+## Overview
 
-### Object Syntax
+tsdown uses [Rolldown](https://rolldown.rs) as its core bundling engine. You can override Rolldown's input and output options directly for fine-grained control.
+
+**Warning:** You should be familiar with Rolldown's behavior before overriding options. Refer to the [Rolldown Config Options](https://rolldown.rs/options/input) documentation.
+
+## Input Options
+
+### Using an Object
 
 ```ts
-import { defineConfig } from 'tsdown'
-
 export default defineConfig({
   inputOptions: {
     cwd: './custom-directory',
@@ -21,13 +20,11 @@ export default defineConfig({
 })
 ```
 
-### Function Syntax
+### Using a Function
 
-Dynamically modify based on format:
+Dynamically modify options based on the output format:
 
 ```ts
-import { defineConfig } from 'tsdown'
-
 export default defineConfig({
   inputOptions(inputOptions, format) {
     inputOptions.cwd = './custom-directory'
@@ -36,13 +33,11 @@ export default defineConfig({
 })
 ```
 
-## Overriding outputOptions
+## Output Options
 
-### Object Syntax
+### Using an Object
 
 ```ts
-import { defineConfig } from 'tsdown'
-
 export default defineConfig({
   outputOptions: {
     legalComments: 'inline',
@@ -50,13 +45,9 @@ export default defineConfig({
 })
 ```
 
-### Function Syntax
-
-Format-specific output options:
+### Using a Function
 
 ```ts
-import { defineConfig } from 'tsdown'
-
 export default defineConfig({
   outputOptions(outputOptions, format) {
     if (format === 'esm') {
@@ -69,46 +60,58 @@ export default defineConfig({
 
 ## Common Use Cases
 
-### Custom Resolve Configuration
+### Preserve Legal Comments
 
 ```ts
 export default defineConfig({
-  inputOptions: {
-    resolve: {
-      mainFields: ['module', 'main'],
-      alias: {
-        '@': './src',
-      },
-    },
-  },
-})
-```
-
-### JSX Configuration
-
-```ts
-export default defineConfig({
-  inputOptions: {
-    transform: {
-      jsx: 'react', // Classic JSX transformation
-    },
-  },
-})
-```
-
-### Legal Comments
-
-```ts
-export default defineConfig({
+  entry: ['src/index.ts'],
   outputOptions: {
-    legalComments: 'inline', // Preserve license headers
+    legalComments: 'inline',
   },
 })
 ```
 
-> **Warning:** Understand Rolldown options before overriding. Refer to [Rolldown documentation](https://rolldown.rs/options/input).
+### Custom Working Directory
 
-<!-- 
-Source references:
-- https://tsdown.dev/advanced/rolldown-options
--->
+```ts
+export default defineConfig({
+  entry: ['src/index.ts'],
+  inputOptions: {
+    cwd: './packages/my-lib',
+  },
+})
+```
+
+### Format-Specific Options
+
+```ts
+export default defineConfig({
+  entry: ['src/index.ts'],
+  format: ['esm', 'cjs'],
+  outputOptions(outputOptions, format) {
+    if (format === 'esm') {
+      outputOptions.legalComments = 'inline'
+    }
+    return outputOptions
+  },
+})
+```
+
+## When to Use
+
+- When tsdown doesn't expose a specific Rolldown option
+- For format-specific Rolldown customizations
+- For advanced bundling scenarios
+
+## Tips
+
+1. **Read Rolldown docs** before overriding options
+2. **Use functions** for format-specific customization
+3. **Test thoroughly** when overriding defaults
+4. **Prefer tsdown options** when available (e.g., use `minify` instead of setting it via `outputOptions`)
+
+## Related
+
+- [Plugins](advanced-plugins.md) - Plugin system
+- [Hooks](advanced-hooks.md) - Lifecycle hooks
+- [Config File](option-config-file.md) - Configuration options

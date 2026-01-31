@@ -1,13 +1,9 @@
 ---
 name: library-development
-description: Anthony Fu's preferences for building and publishing JavaScript/TypeScript libraries
+description: Building and publishing TypeScript libraries with tsdown. Use when creating npm packages, configuring library bundling, or setting up package.json exports.
 ---
 
-# Library Development Preferences
-
-Preferences for bundling and publishing TypeScript libraries.
-
-## Key Decisions
+# Library Development
 
 | Aspect | Choice |
 |--------|--------|
@@ -15,8 +11,6 @@ Preferences for bundling and publishing TypeScript libraries.
 | Output | Pure ESM only (no CJS) |
 | DTS | Generated via tsdown |
 | Exports | Auto-generated via tsdown |
-
----
 
 ## tsdown Configuration
 

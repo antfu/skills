@@ -1,22 +1,9 @@
 ---
 name: app-development
-description: Anthony Fu's preferences for building web applications with Vue, Vite/Nuxt, and UnoCSS
+description: Vue/Nuxt/UnoCSS application conventions. Use when building web apps, choosing between Vite and Nuxt, or writing Vue components.
 ---
 
-# App Development Preferences
-
-Preferences for building web applications.
-
-## Stack Overview
-
-| Aspect | Choice |
-|--------|--------|
-| Framework | Vue 3 (Composition API) |
-| Build Tool | Vite (SPA) or Nuxt (SSR/SSG) |
-| Styling | UnoCSS |
-| Utilities | VueUse |
-
----
+# App Development
 
 ## Framework Selection
 
@@ -25,8 +12,6 @@ Preferences for building web applications.
 | SPA, client-only, library playgrounds | Vite + Vue |
 | SSR, SSG, SEO-critical, file-based routing, API routes | Nuxt |
 
----
-
 ## Vue Conventions
 
 | Convention | Preference |
@@ -34,10 +19,10 @@ Preferences for building web applications.
 | Script syntax | Always `<script setup lang="ts">` |
 | State | Prefer `shallowRef()` over `ref()` |
 | Objects | Use `ref()`, avoid `reactive()` |
+| Styling | UnoCSS |
+| Utilities | VueUse |
 
 ### Props and Emits
-
-Use TypeScript interfaces:
 
 ```vue
 <script setup lang="ts">
