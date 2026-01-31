@@ -50,7 +50,6 @@ Generated from official documentation and fine-tuned by Anthony.
 | [vitest](skills/vitest) | Vitest - unit testing framework powered by Vite | [vitest-dev/vitest](https://github.com/vitest-dev/vitest) |
 | [unocss](skills/unocss) | UnoCSS - atomic CSS engine, presets, transformers | [unocss/unocss](https://github.com/unocss/unocss) |
 | [pnpm](skills/pnpm) | pnpm - fast, disk space efficient package manager | [pnpm/pnpm.io](https://github.com/pnpm/pnpm.io) |
-| [tsdown](skills/tsdown) | tsdown - TypeScript library bundler powered by Rolldown | [rolldown/tsdown](https://github.com/rolldown/tsdown) |
 
 ### Vendored Skills
 
@@ -59,9 +58,12 @@ Synced from external repositories that maintain their own skills.
 | Skill | Description | Source |
 |-------|-------------|--------|
 | [slidev](skills/slidev) (Official) | Slidev - presentation slides for developers | [slidevjs/slidev](https://github.com/slidevjs/slidev) |
-| [vueuse-functions](skills/vueuse-functions) (Official) | VueUse - 200+ Vue composition utilities | [vueuse/skills](https://github.com/vueuse/skills) |
+| [tsdown](skills/tsdown) (Official) | tsdown - TypeScript library bundler powered by Rolldown | [rolldown/tsdown](https://github.com/rolldown/tsdown) |
 | [turborepo](skills/turborepo) (Official) | Turborepo - high-performance build system for monorepos | [vercel/turborepo](https://github.com/vercel/turborepo) |
-| [vue-best-practices](skills/vue-best-practices) | Vue 3 + TypeScript best practices for Volar | [hyf0/vue-skills](https://github.com/hyf0/vue-skills) |
+| [vueuse-functions](skills/vueuse-functions) (Official) | VueUse - 200+ Vue composition utilities | [vueuse/skills](https://github.com/vueuse/skills) |
+| [vue-best-practices](skills/vue-best-practices) | Vue 3 + TypeScript best practices | [vuejs-ai/skills](https://github.com/vuejs-ai/skills) |
+| [vue-router-best-practices](skills/vue-router-best-practices) | Vue Router best practices | [vuejs-ai/skills](https://github.com/vuejs-ai/skills) |
+| [vue-testing-best-practices](skills/vue-testing-best-practices) | Vue testing best practices | [vuejs-ai/skills](https://github.com/vuejs-ai/skills) |
 | [web-design-guidelines](skills/web-design-guidelines) | Web design guidelines for building beautiful interfaces | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) |
 
 ## FAQ
@@ -84,16 +86,13 @@ You might hear people say "AGENTS.md outperforms skills". I think that's true â€
 
 Fork this project to create your own customized skill collection.
 
-> [!NOTE]
-> `nr` is provided by [`@antfu/ni`](https://github.com/antfu/ni). Install it globally: `npm i -g @antfu/ni`.
-
 1. Fork or clone this repository
 2. Install dependencies: `pnpm install`
 3. Update `meta.ts` with your own projects and skill sources
-4. Run `nr start cleanup` (or `pnpm start cleanup`) to remove existing submodules and skills
-5. Run `nr start init` (or `pnpm start init`) to clone the submodules
-6. Run `nr start sync` (or `pnpm start sync`) to sync vendored skills
-7. Ask your agent to "generate skills for \<project\>" (recommended one at a time to manage token usage)
+4. Run `pnpm start cleanup` to remove existing submodules and skills
+5. Run `pnpm start init` to clone the submodules
+6. Run `pnpm start sync` to sync vendored skills
+7. Ask your agent to `Generate skills for \<project\>` (recommended one at a time to manage token usage)
 
 See [AGENTS.md](AGENTS.md) for detailed generation guidelines.
 

@@ -14,7 +14,6 @@ export const submodules = {
   unocss: 'https://github.com/unocss/unocss',
   pnpm: 'https://github.com/pnpm/pnpm.io',
   pinia: 'https://github.com/vuejs/pinia',
-  tsdown: 'https://github.com/rolldown/tsdown',
   vitest: 'https://github.com/vitest-dev/vitest',
   vitepress: 'https://github.com/vuejs/vitepress',
 }
@@ -37,10 +36,19 @@ export const vendors: Record<string, VendorSkillMeta> = {
       'vueuse-functions': 'vueuse-functions',
     },
   },
-  'vue-best-practices': {
-    source: 'https://github.com/hyf0/vue-skills',
+  'tsdown': {
+    official: true,
+    source: 'https://github.com/rolldown/tsdown',
+    skills: {
+      tsdown: 'tsdown',
+    },
+  },
+  'vuejs-ai': {
+    source: 'https://github.com/vuejs-ai/skills',
     skills: {
       'vue-best-practices': 'vue-best-practices',
+      'vue-router-best-practices': 'vue-router-best-practices',
+      'vue-testing-best-practices': 'vue-testing-best-practices',
     },
   },
   'turborepo': {
