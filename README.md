@@ -109,3 +109,11 @@ See [AGENTS.md](AGENTS.md) for detailed generation guidelines.
 Skills and the scripts in this repository are [MIT](LICENSE.md) licensed.
 
 Vendored skills from external repositories retain their original licenses - see each skill directory for details.
+
+## Compatible Agents
+
+These skills work with:
+
+- [Claude Code](https://claude.ai/code) - Anthropic's official CLI
+- [AdaL](https://sylph.ai/adal) - Self-evolving AI coding agent with MCP support
+
