@@ -109,3 +109,9 @@ See [AGENTS.md](AGENTS.md) for detailed generation guidelines.
 Skills and the scripts in this repository are [MIT](LICENSE.md) licensed.
 
 Vendored skills from external repositories retain their original licenses - see each skill directory for details.
+
+## Compatible Agents
+
+These skills work with agents supporting the [Agent Skills](https://agentskills.io) standard, including:
+- [Claude Code](https://claude.com/product/claude-code)
+- [AdaL](https://sylph.ai/) - Self-evolving AI coding agent ([Docs](https://docs.sylph.ai/) | [GitHub](https://github.com/SylphAI-Inc/adal-cli))
