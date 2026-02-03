@@ -3,24 +3,48 @@ name: antfu
 description: Anthony Fu's opinionated tooling and conventions for JavaScript/TypeScript projects. Use when setting up new projects, configuring ESLint/Prettier alternatives, monorepos, library publishing, or when the user mentions Anthony Fu's preferences.
 metadata:
   author: Anthony Fu
-  version: "2026.1.28"
+  version: "2026.02.03"
 ---
 
-# Anthony Fu's Preferences
+## Coding Practices
 
-| Category | Preference |
-|----------|------------|
-| Package Manager | pnpm (with `@antfu/ni` for unified commands) |
-| Language | TypeScript (strict mode, ESM only) |
-| Linting & Formatting | `@antfu/eslint-config` (no Prettier) |
-| Testing | Vitest |
-| Git Hooks | simple-git-hooks + lint-staged |
-| Bundler (Libraries) | tsdown |
-| Documentation | VitePress |
+### Code Organization
+
+- **Single responsibility**: Each source file should have a clear, focused scope/purpose
+- **Split large files**: Break files when they become large or handle too many concerns
+- **Type separation**: Always separate types and interfaces into `types.ts` or `types/*.ts`
+- **Constants extraction**: Move constants to a dedicated `constants.ts` file
+
+### Runtime Environment
+
+- **Prefer isomorphic code**: Write runtime-agnostic code that works in Node, browser, and workers whenever possible
+- **Clear runtime indicators**: When code is environment-specific, add a comment at the top of the file:
+
+```ts
+// @env node
+// @env browser
+```
+
+### TypeScript
+
+- **Explicit return types**: Declare return types explicitly when possible
+- **Avoid complex inline types**: Extract complex types into dedicated `type` or `interface` declarations
+
+### Comments
+
+- **Avoid unnecessary comments**: Code should be self-explanatory
+- **Explain "why" not "how"**: Comments should describe the reasoning or intent, not what the code does
+
+### Testing (Vitest)
+
+- Test files: `foo.ts` → `foo.test.ts` (same directory)
+- Use `describe`/`it` API (not `test`)
+- Use `toMatchSnapshot` for complex outputs
+- Use `toMatchFileSnapshot` with explicit path for language-specific snapshots
 
 ---
 
-## Core Conventions
+## Tooling Choices
 
 ### @antfu/ni Commands
 
@@ -61,7 +85,8 @@ import antfu from '@antfu/eslint-config'
 export default antfu()
 ```
 
-Fix linting errors with `nr lint --fix`. Do NOT add a separate `lint:fix` script.
+
+When completing tasks, run `pnpm run lint --fix` to format the code and fix coding style.
 
 For detailed configuration options: [antfu-eslint-config](references/antfu-eslint-config.md)
 
@@ -73,20 +98,13 @@ For detailed configuration options: [antfu-eslint-config](references/antfu-eslin
     "pre-commit": "pnpm i --frozen-lockfile --ignore-scripts --offline && npx lint-staged"
   },
   "lint-staged": { "*": "eslint --fix" },
-  "scripts": { "prepare": "npx simple-git-hooks" }
+  "scripts": {
+    "prepare": "npx simple-git-hooks"
+  }
 }
 ```
 
-### Vitest Conventions
-
-- Test files: `foo.ts` → `foo.test.ts` (same directory)
-- Use `describe`/`it` API (not `test`)
-- Use `toMatchSnapshot` for complex outputs
-- Use `toMatchFileSnapshot` with explicit path for language-specific snapshots
-
----
-
-## pnpm Catalogs
+### pnpm Catalogs
 
 Use named catalogs in `pnpm-workspace.yaml` for version management:
 
