@@ -20,7 +20,7 @@ Vue 3 best practices, common gotchas, and performance optimization.
 - Library instances breaking in reactive state → See [reactivity-markraw-for-non-reactive](reference/reactivity-markraw-for-non-reactive.md)
 - Expecting watchers to fire for each state change → See [reactivity-same-tick-batching](reference/reactivity-same-tick-batching.md)
 - Integrating external state management libraries → See [reactivity-external-state-integration](reference/reactivity-external-state-integration.md)
-- Deriving state with watchEffect instead of computed → See [reactivity-computed-over-watcheffect-mutations](reference/reactivity-computed-over-watcheffect-mutations.md)
+- Use computed instead of watchEffect for derived state → See [reactivity-computed-over-watcheffect-mutations](reference/reactivity-computed-over-watcheffect-mutations.md)
 
 ### Computed
 - Computed getter is making API calls or mutations → See [computed-no-side-effects](reference/computed-no-side-effects.md)
