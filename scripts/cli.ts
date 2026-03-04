@@ -228,11 +228,9 @@ async function syncSubmodules() {
           const relativePath = fullPath.replace(sourceSkillPath, '')
           const destPath = join(outputPath, relativePath)
 
-          // Ensure destination directory exists
+          // Ensure destination directory exists (mkdir with recursive is safe even if dir exists)
           const destDir = dirname(destPath)
-          if (!existsSync(destDir)) {
-            mkdirSync(destDir, { recursive: true })
-          }
+          mkdirSync(destDir, { recursive: true })
 
           cpSync(fullPath, destPath)
         }
