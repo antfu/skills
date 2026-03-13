@@ -16,6 +16,7 @@ export const submodules = {
   pinia: 'https://github.com/vuejs/pinia',
   vitest: 'https://github.com/vitest-dev/vitest',
   vitepress: 'https://github.com/vuejs/vitepress',
+  nitro: 'https://github.com/nitrojs/nitro',
 }
 
 /**

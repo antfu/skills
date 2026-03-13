@@ -1,6 +1,6 @@
 ---
 name: vite-build-ssr
-description: Vite library mode and SSR configuration
+description: Vite library mode, multi-page apps, JavaScript API, and SSR guidance
 ---
 
 # Build and SSR
@@ -89,90 +89,16 @@ export default defineConfig({
 
 ## SSR Development
 
-### Middleware Mode
+**Note:** Vite's SSR support is **low-level** and designed mostly for meta-framework authors, not application developers. If you need SSR for your app, use a Vite-based meta-framework instead:
 
-Use Vite as middleware in a custom server:
+- **Nuxt** (Vue) - https://nuxt.com
+- **SvelteKit** (Svelte) - https://svelte.dev/docs/kit
+- **SolidStart** (Solid) - https://start.solidjs.com
+- **TanStack Start** (React) - https://tanstack.com/start
 
-```ts
-import express from 'express'
-import { createServer as createViteServer } from 'vite'
+These frameworks build on top of Vite's SSR primitives so you don't have to wire them up yourself.
 
-const app = express()
-
-const vite = await createViteServer({
-  server: { middlewareMode: true },
-  appType: 'custom',
-})
-
-app.use(vite.middlewares)
-
-app.use('*all', async (req, res, next) => {
-  const url = req.originalUrl
-
-  // 1. Read and transform index.html
-  let template = await fs.readFile('index.html', 'utf-8')
-  template = await vite.transformIndexHtml(url, template)
-
-  // 2. Load server entry
-  const { render } = await vite.ssrLoadModule('/src/entry-server.ts')
-
-  // 3. Render app
-  const appHtml = await render(url)
-
-  // 4. Inject into template
-  const html = template.replace('<!--ssr-outlet-->', appHtml)
-
-  res.status(200).set({ 'Content-Type': 'text/html' }).end(html)
-})
-
-app.listen(5173)
-```
-
-### SSR Build
-
-```json
-{
-  "scripts": {
-    "build:client": "vite build --outDir dist/client",
-    "build:server": "vite build --outDir dist/server --ssr src/entry-server.ts"
-  }
-}
-```
-
-The `--ssr` flag:
-- Externalizes dependencies by default
-- Outputs for Node.js consumption
-
-### SSR Manifest
-
-Generate asset mapping for preload hints:
-
-```bash
-vite build --outDir dist/client --ssrManifest
-```
-
-Creates `dist/client/.vite/ssr-manifest.json` mapping module IDs to chunks.
-
-### SSR Externals
-
-Control which deps get bundled vs externalized:
-
-```ts
-export default defineConfig({
-  ssr: {
-    noExternal: ['some-package'],  // Bundle this dep
-    external: ['another-package'], // Externalize this dep
-  },
-})
-```
-
-### Conditional Logic
-
-```ts
-if (import.meta.env.SSR) {
-  // Server-only code (tree-shaken from client)
-}
-```
+**Need a server?** Consider [Nitro](https://nitro.build) -- think of it as "Vite for servers." Nitro provides a portable, framework-agnostic server layer with file-based API routing, auto-imports, and deployment presets for dozens of platforms (Node.js, Deno, Bun, Cloudflare Workers, Vercel, Netlify, etc.). It integrates naturally with Vite and is what powers Nuxt's server engine. See the [Nitro docs](https://nitro.build) for more details.
 
 ## JavaScript API
 
@@ -233,6 +159,6 @@ const env = loadEnv('development', process.cwd(), '')
 <!--
 Source references:
 - https://vite.dev/guide/build
-- https://vite.dev/guide/ssr
 - https://vite.dev/guide/api-javascript
+- https://nitro.build
 -->
