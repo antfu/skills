@@ -66,6 +66,7 @@ interface Project {
 
 interface VendorConfig {
   source: string
+  skillsPath?: string // Optional custom path to skills directory (default: 'skills')
   skills: Record<string, string> // sourceSkillName -> outputSkillName
 }
 
@@ -192,7 +193,8 @@ async function syncSubmodules() {
   for (const [vendorName, config] of Object.entries(vendors)) {
     const vendorConfig = config as VendorConfig
     const vendorPath = join(root, 'vendor', vendorName)
-    const vendorSkillsPath = join(vendorPath, 'skills')
+    const skillsBasePath = vendorConfig.skillsPath || 'skills'
+    const vendorSkillsPath = join(vendorPath, skillsBasePath)
 
     if (!existsSync(vendorPath)) {
       p.log.warn(`Vendor submodule not found: ${vendorName}. Run init first.`)
@@ -200,7 +202,7 @@ async function syncSubmodules() {
     }
 
     if (!existsSync(vendorSkillsPath)) {
-      p.log.warn(`No skills directory in vendor/${vendorName}/skills/`)
+      p.log.warn(`No skills directory in vendor/${vendorName}/${skillsBasePath}/`)
       continue
     }
 
@@ -257,7 +259,7 @@ async function syncSubmodules() {
 
       const syncContent = `# Sync Info
 
-- **Source:** \`vendor/${vendorName}/skills/${sourceSkillName}\`
+- **Source:** \`vendor/${vendorName}/${skillsBasePath}/${sourceSkillName}\`
 - **Git SHA:** \`${sha}\`
 - **Synced:** ${date}
 `

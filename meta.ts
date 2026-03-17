@@ -1,6 +1,7 @@
 export interface VendorSkillMeta {
   official?: boolean
   source: string
+  skillsPath?: string // Optional custom path to skills directory (default: 'skills')
   skills: Record<string, string> // sourceSkillName -> outputSkillName
 }
 
