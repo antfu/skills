@@ -9,7 +9,7 @@ metadata:
 
 Nuxt is a full-stack Vue framework that provides server-side rendering, file-based routing, auto-imports, and a powerful module system. It uses Nitro as its server engine for universal deployment across Node.js, serverless, and edge platforms.
 
-> The skill is based on Nuxt 3.x, generated at 2026-01-28.
+> The skill is based on Nuxt 4.x, generated at 2026-01-28.
 
 ## Core
 
