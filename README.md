@@ -20,6 +20,8 @@ pnpx skills add antfu/skills --skill='*' -g
 
 Learn more about the CLI usage at [skills](https://github.com/vercel-labs/skills).
 
+Chinese users can also search and install skills through [Skills宝](https://skilery.com).
+
 ## Skills
 
 This collection is aim to be a one-stop collection of you are mainly working on Vite/Nuxt. It includes skills from different sources with different scopes.
