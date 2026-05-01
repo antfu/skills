@@ -58,15 +58,14 @@ For published libraries, lock the public API surface so accidental breaking chan
 
 | Tool | Purpose |
 |------|---------|
-| [`tsnapi`](https://github.com/antfu/tsnapi) | Snapshots runtime exports + type declarations into committed `.snapshot.js` / `.snapshot.d.ts` files |
-| [`tsdown-stale-guard`](https://github.com/antfu-collective/tsdown-stale-guard) | Hashes build inputs/outputs so CI can prove the committed snapshots match current source |
+| [`tsnapi`](https://github.com/antfu/tsnapi) | Snapshots runtime exports + type declarations into committed `.snapshot.js` / `.snapshot.d.ts` files via Vitest |
+| [`tsdown-stale-guard`](https://github.com/antfu-collective/tsdown-stale-guard) | Records build input/output hashes so tests fail fast when run against a stale build |
 
-Install both as dev dependencies and wire them as tsdown plugins:
+Install both as dev dependencies. Wire `tsdown-stale-guard` as a tsdown plugin so every build records its hash:
 
 ```ts
 // tsdown.config.ts
 import { defineConfig } from 'tsdown'
-import ApiSnapshot from 'tsnapi/rolldown'
 import { StaleGuardRecorder } from 'tsdown-stale-guard'
 
 export default defineConfig({
@@ -75,32 +74,48 @@ export default defineConfig({
   dts: true,
   exports: true,
   plugins: [
-    ApiSnapshot(),
     StaleGuardRecorder(),
   ],
 })
 ```
 
-### Updating snapshots
+Snapshot the public API from a Vitest test — prefer the Vitest helpers over the tsdown/Rolldown plugin so build config stays focused on building:
 
-After an intentional API change, regenerate snapshots and commit them:
+```ts
+// test/api.test.ts (single package)
+import { snapshotApiPerEntry } from 'tsnapi/vitest'
 
-```bash
-nr build              # runs tsdown, regenerates .snapshot.* files
-# or, ad-hoc:
-nlx tsnapi -u
-UPDATE_SNAPSHOT=1 nlx tsnapi
+await snapshotApiPerEntry(new URL('..', import.meta.url).pathname)
 ```
 
-### CI guard
+```ts
+// test/api.test.ts (monorepo, run from root)
+import { describePackagesApiSnapshots } from 'tsnapi/vitest'
 
-`tsdown-stale-guard` ships a CLI that exits non-zero when the cached build hash no longer matches the source — run it before snapshot/test steps to guarantee the committed snapshots reflect current code:
+await describePackagesApiSnapshots()
+```
 
-```yaml
-# .github/workflows/unit-test.yml (excerpt)
-- run: nr build
-- run: nlx tsdown-stale-guard   # fails CI if build is stale
-- run: nr test
+Gate the snapshot tests on a fresh build — `guardStaleBuild()` throws a structured error if the committed `dist/` no longer matches source, so the snapshots can never lie:
+
+```ts
+// vitest.config.ts
+import { defineConfig } from 'vitest/config'
+import { guardStaleBuild } from 'tsdown-stale-guard'
+
+export default defineConfig({
+  test: {
+    globalSetup: [async () => { await guardStaleBuild() }],
+  },
+})
+```
+
+### Updating snapshots
+
+After an intentional API change, rebuild and update both snapshots in one go:
+
+```bash
+nr build           # regenerates dist/ and the stale-guard hash
+nr test -u         # updates the .snapshot.js / .snapshot.d.ts files
 ```
 
 ---
