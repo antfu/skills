@@ -52,6 +52,59 @@ The `exports: true` option auto-generates the `exports` field in `package.json` 
 
 ---
 
+## API Stability
+
+For published libraries, lock the public API surface so accidental breaking changes appear as a diff in code review.
+
+| Tool | Purpose |
+|------|---------|
+| [`tsnapi`](https://github.com/antfu/tsnapi) | Snapshots runtime exports + type declarations into committed `.snapshot.js` / `.snapshot.d.ts` files |
+| [`tsdown-stale-guard`](https://github.com/antfu-collective/tsdown-stale-guard) | Hashes build inputs/outputs so CI can prove the committed snapshots match current source |
+
+Install both as dev dependencies and wire them as tsdown plugins:
+
+```ts
+// tsdown.config.ts
+import { defineConfig } from 'tsdown'
+import ApiSnapshot from 'tsnapi/rolldown'
+import { StaleGuardRecorder } from 'tsdown-stale-guard'
+
+export default defineConfig({
+  entry: ['src/index.ts'],
+  format: ['esm'],
+  dts: true,
+  exports: true,
+  plugins: [
+    ApiSnapshot(),
+    StaleGuardRecorder(),
+  ],
+})
+```
+
+### Updating snapshots
+
+After an intentional API change, regenerate snapshots and commit them:
+
+```bash
+nr build              # runs tsdown, regenerates .snapshot.* files
+# or, ad-hoc:
+nlx tsnapi -u
+UPDATE_SNAPSHOT=1 nlx tsnapi
+```
+
+### CI guard
+
+`tsdown-stale-guard` ships a CLI that exits non-zero when the cached build hash no longer matches the source — run it before snapshot/test steps to guarantee the committed snapshots reflect current code:
+
+```yaml
+# .github/workflows/unit-test.yml (excerpt)
+- run: nr build
+- run: nlx tsdown-stale-guard   # fails CI if build is stale
+- run: nr test
+```
+
+---
+
 ## package.json
 
 Required fields for pure ESM library:

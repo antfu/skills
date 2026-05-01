@@ -3,7 +3,7 @@ name: antfu
 description: Anthony Fu's opinionated tooling and conventions for JavaScript/TypeScript projects. Use when setting up new projects, configuring ESLint/Prettier alternatives, monorepos, library publishing, or when the user mentions Anthony Fu's preferences.
 metadata:
   author: Anthony Fu
-  version: "2026.02.03"
+  version: "2026.05.01"
 ---
 
 ## Coding Practices
@@ -57,6 +57,20 @@ metadata:
 | `nun <pkg>` | Uninstall dependency |
 | `nci` | Clean install (`pnpm i --frozen-lockfile`) |
 | `nlx <pkg>` | Execute package (`npx`) |
+
+### Checking npm Package Versions
+
+Use [`fast-npm-meta`](https://github.com/antfu/fast-npm-meta) to look up the latest version of a package — it queries a small metadata endpoint instead of downloading the full registry payload (which can be megabytes per package).
+
+```bash
+nlx fast-npm-meta version vite              # 7.3.1
+nlx fast-npm-meta version "nuxt@^3.5"       # 3.5.22 — range-aware
+nlx fast-npm-meta version vite nuxt vue     # multiple at once
+nlx fast-npm-meta version vite --json       # JSON for scripting
+nlx fast-npm-meta full vite                 # full version list + dist-tags
+```
+
+Prefer this over `npm view <pkg> version` when you only need the latest version, and over reading `package.json` from the registry directly.
 
 ### TypeScript Config
 
