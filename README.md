@@ -22,7 +22,7 @@ Learn more about the CLI usage at [skills](https://github.com/vercel-labs/skills
 
 ## Skills
 
-This collection is aim to be a one-stop collection of you are mainly working on Vite/Nuxt. It includes skills from different sources with different scopes.
+This collection is aims to be a one-stop collection if you are mainly working on Vite/Nuxt. It includes skills from different sources with different scopes.
 
 ### Hand-maintained Skills
 
