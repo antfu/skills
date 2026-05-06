@@ -45,7 +45,7 @@ on: [pull_request]
 
 jobs:
   autofix:
-    uses: sxzz/workflows/.github/workflows/autofix.yml@v1
+    uses: sxzz/workflows/.github/workflows/autofix.yml@main
     permissions:
       contents: read
 ```
@@ -67,7 +67,7 @@ permissions: {}
 
 jobs:
   unit-test:
-    uses: sxzz/workflows/.github/workflows/unit-test.yml@v1
+    uses: sxzz/workflows/.github/workflows/unit-test.yml@main
 ```
 
 ### Release Workflow
@@ -84,7 +84,7 @@ on:
 
 jobs:
   release:
-    uses: sxzz/workflows/.github/workflows/release.yml@v1
+    uses: sxzz/workflows/.github/workflows/release.yml@main
     with:
       publish: true
     permissions:
