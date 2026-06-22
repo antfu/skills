@@ -62,6 +62,8 @@ See the dedicated Turborepo skill for detailed configuration.
 
 ## Centralized Alias
 
+Path aliases should be explicit and centralized — this is the deliberate "already set up" case. Outside of these configured aliases, prefer relative imports; don't sprinkle ad-hoc aliases across the codebase.
+
 For better DX across Vite, Nuxt, Vitest configs, create a centralized `alias.ts` at project root:
 
 ```ts
