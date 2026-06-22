@@ -8,14 +8,6 @@ metadata:
 
 ## Coding Practices
 
-### Explicitness
-
-Favor explicit, traceable code over implicit "magic". A reader (human or agent) should be able to follow where every name comes from without running tooling.
-
-- **Explicit imports**: Prefer explicit `import` statements. Avoid auto-imports — when a framework provides them (e.g. Nuxt/Nitro), turn them off for new projects (see [app-development](references/app-development.md)).
-- **No path aliases by default**: Use relative imports (`./foo`, `../bar`). Only use path aliases (`@/`, `~/`, `#imports`, etc.) when they are *already* configured in the project; don't introduce new ones for greenfield code.
-- **Explicit types**: Declare return types, props, and emits rather than relying on inference for public surfaces (see TypeScript below).
-
 ### Code Organization
 
 - **Single responsibility**: Each source file should have a clear, focused scope/purpose
@@ -37,6 +29,13 @@ Favor explicit, traceable code over implicit "magic". A reader (human or agent) 
 
 - **Explicit return types**: Declare return types explicitly when possible
 - **Avoid complex inline types**: Extract complex types into dedicated `type` or `interface` declarations
+
+### Explicitness
+
+Favor explicit, traceable code over implicit "magic". A reader (human or agent) should be able to follow where every name comes from without running tooling.
+
+- **Explicit imports**: Prefer explicit `import` statements. Avoid auto-imports — when a framework provides them (e.g. Nuxt/Nitro), turn them off for new projects (see [app-development](references/app-development.md)).
+- **No path aliases by default**: Use relative imports (`./foo`, `../bar`). Only use path aliases (`@/`, `~/`, `#imports`, etc.) when they are *already* configured in the project; don't introduce new ones for greenfield code.
 
 ### Comments
 

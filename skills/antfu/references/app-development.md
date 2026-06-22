@@ -85,47 +85,6 @@ const emit = defineEmits<Emits>()
 
 ### Storybook for Components
 
-Set up Storybook for component development. Writing stories pushes components toward being **side-effect-free and state-predictable**: every meaningful state becomes an enumerable story driven only by `args`, with no hidden global dependencies.
+Set up Storybook for component development. Expressing each state as a story keeps components side-effect-free and their states predictable.
 
-- **One story per state**: default, loading, error, disabled, etc. — drive everything through `args`.
-- **Keep components pure**: props in, events out. Push data fetching and side effects up to the parent/page layer so stories render deterministically.
-- **Use the `play` function** for interaction tests (simulate user behaviour, then assert).
-
-```ts
-// Button.stories.ts — CSF, Vue + Vite framework
-import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import Button from './Button.vue'
-
-const meta = {
-  title: 'Components/Button',
-  component: Button,
-} satisfies Meta<typeof Button>
-
-export default meta
-type Story = StoryObj<typeof meta>
-
-export const Primary: Story = {
-  args: { label: 'Click me', variant: 'primary' },
-}
-
-export const Disabled: Story = {
-  args: { label: 'Click me', disabled: true },
-}
-```
-
-### Story Tests in CI
-
-Use the **Vitest addon** (`@storybook/addon-vitest`) so stories run as Vitest browser tests. For Vite-powered frameworks (Vue/Nuxt) it supersedes the older Playwright-based test-runner and reuses the existing Vitest setup, so stories run through the same `vitest` command:
-
-```ts
-// .storybook/main.ts
-import type { StorybookConfig } from '@storybook/vue3-vite'
-
-export default {
-  framework: '@storybook/vue3-vite',
-  stories: ['../src/**/*.stories.@(ts|tsx)'],
-  addons: ['@storybook/addon-vitest'],
-} satisfies StorybookConfig
-```
-
-Because the addon turns stories into Vitest tests, they are picked up by `nr test` and run automatically by the existing Unit Test workflow (see [setting-up](setting-up.md)) — no separate CI job is required. Render errors fail the test even for stories without a `play` function, so every story acts as a smoke test.
+Run the story tests in CI. Prefer the Vitest addon (`@storybook/addon-vitest`) so stories run as part of the existing `vitest` run (see [setting-up](setting-up.md)).
