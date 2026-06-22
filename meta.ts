@@ -72,4 +72,5 @@ export const vendors: Record<string, VendorSkillMeta> = {
  */
 export const manual = [
   'antfu',
+  'antfu-design',
 ]
