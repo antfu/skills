@@ -9,6 +9,7 @@ Use this as a hard checklist before returning UI code.
 
 ## Must Do
 
+- Declare a design read and set the three dials from an appropriate baseline before choosing a look (core-design-read).
 - Define semantic shortcuts first (`bg-base`, `border-base`, `color-base`, `color-active`, `btn-action`).
 - Ensure core tokens work in both light and dark mode.
 - Name depth layers (`z-top-nav`, `z-panel-content`, `z-drawer-content`) and use those names in markup.
@@ -16,6 +17,8 @@ Use this as a hard checklist before returning UI code.
 - Keep icon/status class strings literal in code paths that may be tree-shaken (`// @unocss-include` when needed).
 - Use `font-mono` + `tabular-nums` for technical values (counts, SHAs, timestamps, percentages).
 - For truncated path/ID labels, keep full value in `title`.
+- Use one accent color, with neutral primitives first.
+- Use concentric radius on nested rounded elements; honor `prefers-reduced-motion` for any non-trivial motion.
 
 ## Must Not Do
 
@@ -24,6 +27,9 @@ Use this as a hard checklist before returning UI code.
 - Do not emit Attributify-style utility attributes in generated examples.
 - Do not build icon class names via interpolation that UnoCSS cannot statically detect.
 - Do not design only for one theme; avoid light-only or dark-only primitives.
+- Do not emit the em-dash (U+2014) or en-dash (U+2013) in any user-facing text (best-practices-anti-slop).
+- Do not ship AI-slop tells: generic names, fake-perfect numbers, AI-purple defaults, or div-based fake screenshots.
+- Do not use `transition: all`; specify exact properties.
 
 ## Return-Ready Snippet Pattern
 
@@ -47,14 +53,39 @@ Use this as a hard checklist before returning UI code.
 </div>
 ```
 
-## Preflight Checklist
+## Consolidated Pre-Flight Checklist
 
+Run before returning UI code. If a box cannot be ticked honestly, it is not done.
+
+Foundations
+- design read declared, dials set from an appropriate baseline (core-design-read)
 - semantic shortcuts used in markup
 - light/dark-safe base tokens present
-- named z-layer shortcuts used
+- named z-layer shortcuts used (no raw z-index in markup)
 - class-only utilities (no Attributify)
-- truncation + `title` for long paths/IDs
-- technical values use mono/tabular treatment
+
+Data and type
+- long path/ID labels truncate with full value in `title`
+- technical values use mono + tabular-nums
+- one accent color, neutral base, no AI-purple default
+- serif only when justified; not Inter by reflex
+
+Polish
+- nested rounded elements use concentric radius
+- borders for dense or structural surfaces, layered shadows for elevated ones
+- enters split and staggered, exits subtle, no `transition: all`
+- dynamic numbers use tabular-nums, images have a pure black or white outline
+- interactive controls have a 40x40px hit area
+- motion above the static band honors `prefers-reduced-motion`
+
+Anti-slop
+- zero em-dash and en-dash characters anywhere visible
+- no generic names, fake-perfect numbers, filler verbs, or div-based fake screenshots
+- no decorative dots, scroll cues, or version stamps unless the brief calls for them
+- every visible string re-read in a copy self-audit
+
+Redesign (if applicable)
+- mode detected, audit done, IA, SEO, and nav labels preserved
 
 <!--
 Source references:
@@ -65,4 +96,6 @@ Source references:
 - https://github.com/antfu/vite-plugin-inspect/blob/main/uno.config.ts
 - https://github.com/antfu/agent-container/blob/main/hub/uno.config.ts
 - https://github.com/antfu/agent-container/blob/main/hub/app/state/status.ts
+- https://github.com/Leonxlnx/taste-skill
+- https://github.com/jakubkrehel/make-interfaces-feel-better
 -->
