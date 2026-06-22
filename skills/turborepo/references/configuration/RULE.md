@@ -73,7 +73,7 @@ When you run `turbo run lint`, Turborepo finds all packages with a `lint` script
 
 ```json
 {
-  "$schema": "https://v2-8-18-canary-7.turborepo.dev/schema.json",
+  "$schema": "https://v2-9-19-canary-9.turborepo.dev/schema.json",
   "globalEnv": ["CI"],
   "globalDependencies": ["tsconfig.json"],
   "tasks": {
@@ -91,12 +91,36 @@ When you run `turbo run lint`, Turborepo finds all packages with a `lint` script
 
 The `$schema` key enables IDE autocompletion and validation.
 
+### With `futureFlags.globalConfiguration`
+
+When the `globalConfiguration` future flag is enabled, global options move under a `global` key with cleaner names:
+
+```json
+{
+  "$schema": "https://v2-9-19-canary-9.turborepo.dev/schema.json",
+  "futureFlags": { "globalConfiguration": true },
+  "global": {
+    "inputs": ["tsconfig.json"],
+    "env": ["CI"],
+    "ui": "tui"
+  },
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    }
+  }
+}
+```
+
+See the [global options reference](./global-options.md) for the full rename mapping and behavior changes.
+
 ## Configuration Sections
 
 **Global options** - Settings affecting all tasks:
 
-- `globalEnv`, `globalDependencies`, `globalPassThroughEnv`
-- `cacheDir`, `daemon`, `envMode`, `ui`, `remoteCache`
+- Without flag: `globalEnv`, `globalDependencies`, `globalPassThroughEnv`, `cacheDir`, `daemon`, `envMode`, `ui`, `remoteCache`
+- With `globalConfiguration` flag: all of the above move under the `global` key (see [global options](./global-options.md))
 
 **Task definitions** - Per-task settings in `tasks` object:
 
@@ -113,7 +137,7 @@ Use `turbo.json` in individual packages to override root settings:
   "extends": ["//"],
   "tasks": {
     "build": {
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
     }
   }
 }
@@ -161,13 +185,18 @@ By default, array fields in Package Configurations **replace** root values. Use 
   "tasks": {
     "build": {
       // Inherits "dist/**" from root, adds ".next/**"
-      "outputs": ["$TURBO_EXTENDS$", ".next/**", "!.next/cache/**"]
+      "outputs": [
+        "$TURBO_EXTENDS$",
+        ".next/**",
+        "!.next/cache/**",
+        "!.next/dev/**"
+      ]
     }
   }
 }
 ```
 
-Without `$TURBO_EXTENDS$`, outputs would only be `[".next/**", "!.next/cache/**"]`.
+Without `$TURBO_EXTENDS$`, outputs would only be `[".next/**", "!.next/cache/**", "!.next/dev/**"]`.
 
 **Works with:**
 
@@ -204,7 +233,7 @@ Use `turbo.jsonc` extension to add comments with IDE support:
   "tasks": {
     "build": {
       // Next.js outputs
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
     }
   }
 }

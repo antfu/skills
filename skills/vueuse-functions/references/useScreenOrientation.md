@@ -80,7 +80,7 @@ export interface ScreenOrientation extends EventTarget {
 }
 export interface UseScreenOrientationOptions extends ConfigurableWindow {}
 export interface UseScreenOrientationReturn extends Supportable {
-  orientation: Ref<OrientationType | undefined>
+  orientation: ShallowRef<OrientationType | undefined>
   angle: ShallowRef<number>
   lockOrientation: (type: OrientationLockType) => Promise<void>
   unlockOrientation: () => void

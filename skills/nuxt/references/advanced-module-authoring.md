@@ -120,7 +120,7 @@ export default defineNuxtModule({
 ### Composables and Auto-imports
 
 ```ts
-import { addImports, addImportsDir, createResolver } from '@nuxt/kit'
+import { addImports, addImportsDir, addImportsSources, createResolver } from '@nuxt/kit'
 
 export default defineNuxtModule({
   setup() {
@@ -134,9 +134,34 @@ export default defineNuxtModule({
 
     // Directory of composables
     addImportsDir(resolve('./runtime/composables'))
+
+    // Auto-import from packages (Nuxt 4: accepts an array + package presets)
+    addImportsSources([
+      { package: '@vueuse/core' }, // all of the package's documented exports
+      { from: 'my-lib', imports: ['useThing', 'useOther'] },
+    ])
   },
 })
 ```
+
+### Keyed Composables (SSR/client key injection)
+
+If your composable needs a stable key shared between server and client (like `useState`/`useAsyncData`), register it so Nuxt's compiler injects a unique key when called with fewer than `argumentLength` args:
+
+```ts
+export default defineNuxtModule({
+  setup(options, nuxt) {
+    const { resolve } = createResolver(import.meta.url)
+    nuxt.options.optimization.keyedComposables.push({
+      name: 'useMyState',
+      source: resolve('./runtime/composables/state'), // exact source file (no barrels)
+      argumentLength: 2,
+    })
+  },
+})
+```
+
+The call must be statically analyzable and imported directly from `source` (barrel re-exports, dynamic/indirect calls, and reassignments are not transformed).
 
 ### Plugins
 
@@ -497,11 +522,11 @@ export default defineNuxtModule({
     "prepare": "nuxt-module-build build --stub"
   },
   "dependencies": {
-    "@nuxt/kit": "^3.0.0"
+    "@nuxt/kit": "^4.0.0"
   },
   "devDependencies": {
     "@nuxt/module-builder": "latest",
-    "nuxt": "^3.0.0"
+    "nuxt": "^4.0.0"
   }
 }
 ```
@@ -543,12 +568,14 @@ export default defineNuxtConfig({
 
 <!--
 Source references:
-- https://nuxt.com/docs/api/kit/modules
-- https://nuxt.com/docs/api/kit/components
-- https://nuxt.com/docs/api/kit/autoimports
-- https://nuxt.com/docs/api/kit/plugins
-- https://nuxt.com/docs/api/kit/templates
-- https://nuxt.com/docs/api/kit/nitro
-- https://nuxt.com/docs/api/kit/pages
-- https://nuxt.com/docs/api/kit/resolving
+- https://nuxt.com/docs/4.x/api/kit/modules
+- https://nuxt.com/docs/4.x/api/kit/components
+- https://nuxt.com/docs/4.x/api/kit/autoimports
+- https://nuxt.com/docs/4.x/api/kit/plugins
+- https://nuxt.com/docs/4.x/api/kit/templates
+- https://nuxt.com/docs/4.x/api/kit/nitro
+- https://nuxt.com/docs/4.x/api/kit/pages
+- https://nuxt.com/docs/4.x/api/kit/resolving
+- https://nuxt.com/docs/4.x/guide/modules/recipes-basics
+- https://nuxt.com/docs/4.x/guide/modules/module-dependencies
 -->

@@ -1,6 +1,6 @@
-# tsdown Skills for Claude Code
+# tsdown Skills
 
-Agent skills that help Claude Code understand and work with [tsdown](https://tsdown.dev), the elegant library bundler.
+Agent skills that help AI coding agents understand and work with [tsdown](https://tsdown.dev), the elegant library bundler.
 
 ## Installation
 
@@ -8,7 +8,11 @@ Agent skills that help Claude Code understand and work with [tsdown](https://tsd
 npx skills add rolldown/tsdown
 ```
 
-This will add the tsdown skill to your Claude Code configuration.
+This will install all tsdown skills (including the migration skill). To install only the tsdown skill:
+
+```bash
+npx skills add rolldown/tsdown --skill tsdown
+```
 
 ## What's Included
 
@@ -56,6 +60,10 @@ Help me migrate from tsup to tsdown
 ```
 Set up a monorepo build with tsdown workspace support
 ```
+
+## Related Skills
+
+- **[tsdown-migrate](https://github.com/rolldown/tsdown/tree/main/skills/tsdown-migrate)** - Dedicated skill for migrating from tsup to tsdown, with complete option mappings, config transformations, and troubleshooting guidance.
 
 ## Documentation
 

@@ -15,6 +15,7 @@ Effective data fetching patterns for SSR-friendly, performant Nuxt applications.
 | User interactions (clicks, forms) | `$fetch` |
 | Third-party SDK/API | `useAsyncData` with custom function |
 | Multiple parallel requests | `useAsyncData` with `Promise.all` |
+| Reusable API client with shared defaults | `createUseFetch` factory |
 
 ## Await vs Non-Await Usage
 
@@ -327,6 +328,49 @@ const { refresh } = await useFetch('/api/user', { key: 'current-user' })
 </script>
 ```
 
+## Centralize API Config with createUseFetch
+
+Instead of hand-rolling a wrapper around `useFetch` (and worrying about whether to `await` it), use the `createUseFetch` factory. It produces a fully typed composable with shared `baseURL`, headers, and interceptors:
+
+```ts
+// app/composables/useAPI.ts
+export const useAPI = createUseFetch({
+  baseURL: 'https://api.nuxt.com',
+  onRequest({ options }) {
+    const { session } = useUserSession()
+    if (session.value?.token) {
+      options.headers.set('Authorization', `Bearer ${session.value.token}`)
+    }
+  },
+  async onResponseError({ response }) {
+    if (response.status === 401) await navigateTo('/login')
+  },
+})
+```
+
+```vue
+<script setup lang="ts">
+const { data: profile } = await useAPI('/me') // auth + 401 handling baked in
+</script>
+```
+
+For lower-level control, create a custom `$fetch` instance in a plugin and wrap it with `useAsyncData` (or pass it to `createUseFetch`) — this avoids double fetching during SSR:
+
+```ts
+// app/plugins/api.ts
+export default defineNuxtPlugin(() => {
+  const api = $fetch.create({ baseURL: 'https://api.nuxt.com' })
+  return { provide: { api } }
+})
+```
+
+```vue
+<script setup lang="ts">
+const { $api } = useNuxtApp()
+const { data } = await useAsyncData('modules', () => $api('/modules'))
+</script>
+```
+
 ## Avoid useAsyncData for Side Effects
 
 ### ❌ Wrong: Side Effects in useAsyncData
@@ -350,8 +394,9 @@ await callOnce(async () => {
 
 <!-- 
 Source references:
-- https://nuxt.com/docs/getting-started/data-fetching
-- https://nuxt.com/docs/api/composables/use-fetch
-- https://nuxt.com/docs/api/composables/use-async-data
-- https://nuxt.com/docs/api/composables/use-lazy-fetch
+- https://nuxt.com/docs/4.x/getting-started/data-fetching
+- https://nuxt.com/docs/4.x/api/composables/use-fetch
+- https://nuxt.com/docs/4.x/api/composables/use-async-data
+- https://nuxt.com/docs/4.x/api/composables/use-lazy-fetch
+- https://nuxt.com/docs/4.x/guide/recipes/custom-usefetch
 -->

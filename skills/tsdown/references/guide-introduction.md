@@ -25,7 +25,7 @@ Supports the full Rolldown plugin ecosystem plus most Rollup plugins. See [Plugi
 ## Key Differences from Rolldown
 
 tsdown wraps Rolldown with library-specific features:
-- Auto-external dependencies from `package.json`
+- Auto-external `dependencies`, `peerDependencies`, and `optionalDependencies` from `package.json`
 - DTS generation
 - `package.json` exports field generation
 - Watch mode with keyboard shortcuts

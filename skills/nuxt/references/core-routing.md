@@ -202,6 +202,50 @@ function enableAdmin() {
 </script>
 ```
 
+### Passing Props to Layouts (Nuxt 4.4+)
+
+Use the object syntax for `layout` to pass typed props to the layout component:
+
+```vue
+<!-- app/pages/dashboard.vue -->
+<script setup lang="ts">
+definePageMeta({
+  layout: { name: 'panel', props: { sidebar: true, title: 'Dashboard' } },
+})
+</script>
+```
+
+```vue
+<!-- app/layouts/panel.vue -->
+<script setup lang="ts">
+const props = defineProps<{ sidebar?: boolean, title?: string }>()
+</script>
+```
+
+Props are fully typed from the layout's `defineProps`. Also works dynamically: `setPageLayout('panel', { sidebar: true })`.
+
+## Named Views
+
+A route can render into multiple `<NuxtPage>` outlets. Add named view files with the `name@view.vue` convention next to the default route file:
+
+```
+pages/
+├── parent.vue
+└── parent/
+    ├── child.vue           → default <NuxtPage />
+    └── child@sidebar.vue   → <NuxtPage name="sidebar" />
+```
+
+```vue
+<!-- pages/parent.vue -->
+<template>
+  <NuxtPage />
+  <aside><NuxtPage name="sidebar" /></aside>
+</template>
+```
+
+`definePageMeta` is read from the default route file only.
+
 ## Navigation Hooks
 
 ```vue
@@ -220,7 +264,8 @@ onBeforeRouteUpdate((to, from) => {
 
 <!-- 
 Source references:
-- https://nuxt.com/docs/getting-started/routing
-- https://nuxt.com/docs/directory-structure/app/pages
-- https://nuxt.com/docs/directory-structure/app/middleware
+- https://nuxt.com/docs/4.x/getting-started/routing
+- https://nuxt.com/docs/4.x/directory-structure/app/pages
+- https://nuxt.com/docs/4.x/directory-structure/app/middleware
+- https://nuxt.com/docs/4.x/api/utils/define-page-meta
 -->

@@ -66,7 +66,8 @@ export default defineNuxtModule({
 | `modules:done` | All modules installed |
 | `build:before` | Before build starts |
 | `build:done` | Build complete |
-| `pages:extend` | Pages routes resolved |
+| `pages:extend` | Add/modify routes (before meta scan) |
+| `pages:resolved` | After page meta is scanned (with `scanPageMeta`) |
 | `components:dirs` | Component dirs being resolved |
 | `imports:extend` | Auto-imports being resolved |
 | `nitro:config` | Before Nitro config finalized |
@@ -284,6 +285,6 @@ export default defineNitroPlugin((nitroApp) => {
 
 <!-- 
 Source references:
-- https://nuxt.com/docs/guide/going-further/hooks
-- https://nuxt.com/docs/api/advanced/hooks
+- https://nuxt.com/docs/4.x/guide/going-further/hooks
+- https://nuxt.com/docs/4.x/api/advanced/hooks
 -->

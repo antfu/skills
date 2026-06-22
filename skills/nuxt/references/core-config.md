@@ -20,6 +20,40 @@ export default defineNuxtConfig({
 })
 ```
 
+### Nuxt 4 Path Aliases
+
+In Nuxt 4 the default `srcDir` is `app/`, so the path aliases changed:
+
+| Alias | Resolves to |
+|-------|-------------|
+| `~` / `@` | `<rootDir>/app` |
+| `~~` / `@@` | `<rootDir>` (project root) |
+| `#shared` | `<rootDir>/shared` |
+| `#server` | `<rootDir>/server` |
+
+Reference root-level paths (modules, server handlers) with `~~` or `#server`:
+
+```ts
+export default defineNuxtConfig({
+  modules: ['~~/custom-modules/awesome.js'], // relative to rootDir
+  serverHandlers: [
+    { route: '/foo/**', handler: '#server/foohandler.ts' },
+  ],
+})
+```
+
+### Compatibility Version
+
+Nuxt 4 is the default behavior. To preview upcoming Nuxt 5 defaults (Vite Environment API, normalized page names, etc.):
+
+```ts
+export default defineNuxtConfig({
+  future: {
+    compatibilityVersion: 5,
+  },
+})
+```
+
 ### Environment Overrides
 
 Configure environment-specific settings:
@@ -142,6 +176,23 @@ export default defineNuxtConfig({
 })
 ```
 
+### Environment-specific Vite Config
+
+Top-level `vite` options are shared. Use `$client` and `$server` to target a single Vite build:
+
+```ts
+export default defineNuxtConfig({
+  vite: {
+    $client: {
+      build: { rollupOptions: { output: { manualChunks: { analytics: ['analytics-package'] } } } },
+    },
+    $server: {
+      build: { sourcemap: 'inline' },
+    },
+  },
+})
+```
+
 ## Vue Configuration
 
 Enable Vue experimental features:
@@ -154,9 +205,35 @@ export default defineNuxtConfig({
 })
 ```
 
+## Experimental Features & Defaults
+
+Notable Nuxt 4 flags under `experimental` (see source for the full list):
+
+```ts
+export default defineNuxtConfig({
+  experimental: {
+    // Stream the HTML shell first, then render body progressively (better TTFB)
+    ssrStreaming: true,
+    // Run useFetch when its key changes even if immediate:false and not yet triggered
+    alwaysRunFetchOnKeyChange: true,
+    // Split useAsyncData handlers into separate chunks (static builds)
+    extractAsyncDataHandlers: true,
+    // pending is true before fetching starts
+    pendingWhenIdle: true,
+    // Default options for core composables/components
+    defaults: {
+      nuxtLink: { prefetch: true, prefetchOn: { visibility: true } },
+      useAsyncData: { deep: true },
+      useState: { resetOnClear: true },
+    },
+  },
+})
+```
+
 <!-- 
 Source references:
-- https://nuxt.com/docs/getting-started/configuration
-- https://nuxt.com/docs/guide/going-further/runtime-config
-- https://nuxt.com/docs/api/nuxt-config
+- https://nuxt.com/docs/4.x/getting-started/configuration
+- https://nuxt.com/docs/4.x/guide/going-further/runtime-config
+- https://nuxt.com/docs/4.x/api/nuxt-config
+- https://nuxt.com/docs/4.x/guide/going-further/experimental-features
 -->

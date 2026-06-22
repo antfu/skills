@@ -112,11 +112,12 @@ test.concurrent('test 2', async ({ expect }) => {
 })
 ```
 
-### Sequential Tests
+### Opt Out of Concurrency
+
+`test.sequential` was **removed in v5**. Use `concurrent: false` to opt a test out of inherited or globally configured concurrency:
 
 ```ts
-// Force sequential in concurrent context
-test.sequential('must run alone', async () => {})
+test('must run alone', { concurrent: false }, async () => {})
 ```
 
 ## Parameterized Tests
@@ -169,31 +170,44 @@ test.for([
 First argument provides context utilities:
 
 ```ts
-test('with context', ({ expect, skip, task }) => {
-  console.log(task.name)   // Test name
-  skip(someCondition)      // Skip dynamically
-  expect(1).toBe(1)        // Context-bound expect
+test('with context', ({ expect, skip, task, signal, annotate }) => {
+  console.log(task.name)        // Test metadata
+  skip(someCondition, 'reason') // Skip dynamically
+  expect(1).toBe(1)             // Context-bound expect
+})
+
+// signal (3.2+): AbortSignal aborted on timeout/cancel/bail
+test('aborts on timeout', async ({ signal }) => {
+  await fetch('/resource', { signal })
+}, 2000)
+
+// annotate (3.2+): attach notes shown by the reporter
+test('annotated', async ({ annotate }) => {
+  await annotate('see issue #123', 'issues')
 })
 ```
 
 ## Custom Test with Fixtures
 
+Prefer the **builder pattern** (4.1+) for automatic type inference:
+
 ```ts
 import { test as base } from 'vitest'
 
-const test = base.extend({
-  db: async ({}, use) => {
+const test = base
+  .extend('db', async ({}, { onCleanup }) => {
     const db = await createDb()
-    await use(db)
-    await db.close()
-  },
-})
+    onCleanup(() => db.close()) // runs after the test/scope
+    return db
+  })
 
 test('query', async ({ db }) => {
   const users = await db.query('SELECT * FROM users')
   expect(users).toBeDefined()
 })
 ```
+
+See [features-context](features-context.md) for fixture scopes, `test.override`, and the Playwright-compatible object syntax.
 
 ## Retry Configuration
 
@@ -214,18 +228,36 @@ test('with delay', {
 
 ## Tags
 
+Tags must be declared in config first, then applied to tests (4.1+):
+
 ```ts
 test('database test', { tags: ['db', 'slow'] }, async () => {})
 
-// Run with: vitest --tags db
+// Run with a tag expression:
+// vitest --tagsFilter "db && !flaky"
+```
+
+See [features-test-tags](features-test-tags.md) for defining tags and filter syntax.
+
+## Benchmarks (v5)
+
+`bench` is no longer a top-level import — it is a [test-context fixture](features-benchmarking.md) used inside `test()`:
+
+```ts
+// file must match benchmark.include (e.g. *.bench.ts)
+test('sort', async ({ bench }) => {
+  await bench('Array.sort', () => [3, 1, 2].sort()).run()
+})
 ```
 
 ## Key Points
 
+- Pass options as the **second argument**; the 3rd-arg options object was removed in v4 (a trailing timeout number is still allowed)
 - Tests with no body are marked as `todo`
 - `test.only` throws in CI unless `allowOnly: true`
 - Use context's `expect` for concurrent tests and snapshots
 - Function name is used as test name if passed as first arg
+- `test.sequential` was removed in v5 — use `{ concurrent: false }`
 
 <!-- 
 Source references:

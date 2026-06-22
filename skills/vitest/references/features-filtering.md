@@ -102,31 +102,27 @@ test('dynamic', ({ skip }) => {
 
 ## Tags
 
-Filter by custom tags:
+Tags must be declared in config, then applied to tests/suites and filtered with a tag expression:
 
 ```ts
-test('database test', { tags: ['db'] }, () => {})
-test('slow test', { tags: ['slow', 'integration'] }, () => {})
-```
-
-Run tagged tests:
-
-```bash
-vitest --tags db
-vitest --tags "db,slow"      # OR
-vitest --tags db --tags slow # OR
-```
-
-Configure allowed tags:
-
-```ts
+// vitest.config.ts
 defineConfig({
   test: {
-    tags: ['db', 'slow', 'integration'],
-    strictTags: true, // Fail on unknown tags
+    tags: [{ name: 'db' }, { name: 'slow' }, { name: 'flaky' }],
   },
 })
+
+// test file
+test('database test', { tags: ['db'] }, () => {})
 ```
+
+```bash
+vitest --tagsFilter "db && !flaky"
+vitest --tagsFilter "unit || e2e"
+vitest --list-tags            # show defined tags
+```
+
+Full syntax, priority, and per-tag options: see [features-test-tags](features-test-tags.md).
 
 ## Include/Exclude Patterns
 
@@ -145,9 +141,14 @@ defineConfig({
     
     // Include source for in-source testing
     includeSource: ['src/**/*.ts'],
+
+    // Scope discovery to a directory (faster than broad excludes)
+    dir: './src',
   },
 })
 ```
+
+> v4 simplified default `exclude` to only `node_modules`/`.git`. Prefer `test.dir` to limit where tests are found; spread `configDefaults.exclude` to restore the old excludes.
 
 ## Watch Mode Filtering
 
