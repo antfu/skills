@@ -101,7 +101,7 @@ export default defineConfig({
 })
 ```
 
-See [Rolldown docs](https://rolldown.rs/reference/config-options#treeshake) for all options.
+See [Rolldown docs](https://rolldown.rs/reference/InputOptions.treeshake#treeshake) for all options.
 
 ### Disable
 

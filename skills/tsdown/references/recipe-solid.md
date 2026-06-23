@@ -1,6 +1,6 @@
 # Solid Support
 
-Build Solid component libraries with `tsdown` using `rolldown-plugin-solid` or `unplugin-solid`.
+Build Solid component libraries with `tsdown` using `unplugin-solid`.
 
 ## Quick Start
 
@@ -11,7 +11,7 @@ npx create-tsdown@latest -t solid
 ## Configuration
 
 ```ts
-import solid from 'rolldown-plugin-solid' // or 'unplugin-solid/rolldown'
+import solid from 'unplugin-solid/rolldown'
 import { defineConfig } from 'tsdown'
 
 export default defineConfig({
@@ -24,13 +24,9 @@ export default defineConfig({
 
 ## Dependencies
 
-Install one of:
+Install `unplugin-solid`:
 
 ```bash
-# Option 1: rolldown-plugin-solid
-npm install -D rolldown-plugin-solid
-
-# Option 2: unplugin-solid
 npm install -D unplugin-solid
 ```
 

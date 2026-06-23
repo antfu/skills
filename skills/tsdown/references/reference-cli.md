@@ -276,7 +276,7 @@ See [Executable](option-exe.md) for advanced configuration and cross-platform bu
 
 ### `--exports`
 
-Auto-generate package.json exports field:
+Generate the `exports` field in package.json:
 
 ```bash
 tsdown --exports

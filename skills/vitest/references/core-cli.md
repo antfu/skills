@@ -68,6 +68,15 @@ Initialize project setup:
 vitest init browser            # Set up browser testing
 ```
 
+### `vitest --list-tags`
+
+List tags defined in config without running tests:
+
+```bash
+vitest --list-tags             # Human-readable list
+vitest --list-tags=json        # JSON output
+```
+
 ## Common Options
 
 ```bash
@@ -77,12 +86,14 @@ vitest init browser            # Set up browser testing
 
 # Filtering
 --testNamePattern, -t     # Run tests matching pattern
+--tagsFilter <expr>       # Run tests by tag expression, e.g. "db && !flaky"
 --changed                 # Run tests for changed files
 --changed HEAD~1          # Tests for last commit changes
+--dir <path>              # Limit test discovery to a directory
 
 # Reporters
---reporter <name>         # default, verbose, dot, json, html
---reporter=html --outputFile=report.html
+--reporter <name>         # default, verbose, tree, dot, json, html, junit, minimal, blob
+--reporter=json --outputFile=report.json
 
 # Coverage
 --coverage                # Enable coverage
@@ -93,11 +104,12 @@ vitest init browser            # Set up browser testing
 --shard <index>/<count>   # Split tests across machines
 --bail <n>                # Stop after n failures
 --retry <n>               # Retry failed tests n times
---sequence.shuffle        # Randomize test order
+--shuffle                 # Randomize test order
+--no-file-parallelism     # Run test files one at a time
 
 # Watch mode
 --no-watch                # Disable watch mode
---standalone              # Start without running tests
+--standalone              # Start without running (v4: runs matched files if a filter is passed)
 
 # Environment
 --environment <env>       # jsdom, happy-dom, node
@@ -127,20 +139,17 @@ vitest init browser            # Set up browser testing
 
 ## Sharding for CI
 
-Split tests across multiple machines:
+Split tests across multiple machines. The blob reporter writes to `.vitest/blob/` by default:
 
 ```bash
 # Machine 1
-vitest run --shard=1/3 --reporter=blob
+vitest run --shard=1/3 --reporter=blob --outputFile=reports/blob-1.json
 
 # Machine 2
-vitest run --shard=2/3 --reporter=blob
+vitest run --shard=2/3 --reporter=blob --outputFile=reports/blob-2.json
 
-# Machine 3
-vitest run --shard=3/3 --reporter=blob
-
-# Merge reports
-vitest --merge-reports --reporter=junit
+# Merge all blobs into a final report
+vitest --merge-reports=reports --reporter=junit --reporter=default
 ```
 
 ## Watch Mode Keyboard Shortcuts
@@ -159,6 +168,8 @@ In watch mode, press:
 - Use `--run` flag to ensure single run (important for lint-staged)
 - Both camelCase (`--testTimeout`) and kebab-case (`--test-timeout`) work
 - Boolean options can be negated with `--no-` prefix
+- Filter tests by tag with `--tagsFilter` (tags must be declared in config) — see [features-test-tags](features-test-tags.md)
+- `--merge-reports` and `--reporter=blob` do not work in watch mode
 
 <!-- 
 Source references:

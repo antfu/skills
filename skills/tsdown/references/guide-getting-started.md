@@ -14,8 +14,13 @@ pnpm add -D typescript
 ```
 
 **Requirements:**
-- Node.js 20.19 or higher
+- Node.js 22.18.0 or higher **to run tsdown** (build-time only)
 - Experimental support for Deno and Bun
+
+> [!NOTE]
+> The Node.js 22.18+ requirement only applies to the environment that runs `tsdown` itself. The **bundled output** can target much lower Node.js versions via the [`target`](./option-target.md) option, so libraries built with tsdown are not locked to Node.js 22+ at runtime.
+>
+> If your package needs to support Node.js 18 / 20, the recommended workflow is to **build with Node.js 22+ in CI**, then **test the built output (or the packed tarball) against the lower Node.js versions** you intend to support.
 
 ## Quick Start Templates
 

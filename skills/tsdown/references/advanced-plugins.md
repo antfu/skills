@@ -359,7 +359,7 @@ Vite plugins may rely on Vite-specific APIs:
 
 ## Resources
 
-- [Rolldown Plugin Development](https://rolldown.rs/guide/plugin-development)
+- [Rolldown Plugin Development](https://rolldown.rs/apis/plugin-api)
 - [Unplugin Documentation](https://unplugin.unjs.io/)
 - [Rollup Plugins](https://github.com/rollup/plugins)
 - [Vite Plugins](https://vitejs.dev/plugins/)

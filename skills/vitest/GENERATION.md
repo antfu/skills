@@ -1,5 +1,5 @@
 # Generation Info
 
 - **Source:** `sources/vitest`
-- **Git SHA:** `4a7321e10672f00f0bb698823a381c2cc245b8f7`
-- **Generated:** 2026-01-28
+- **Git SHA:** `3f60d0893affbda989404555136fe20a6086d4e6`
+- **Generated:** 2026-06-22

@@ -5,31 +5,36 @@ description: Nuxt project folder structure, conventions, and file organization
 
 # Directory Structure
 
-Nuxt uses conventions-based directory structure. Understanding it is key to effective development.
+Nuxt uses a conventions-based directory structure. Understanding it is key to effective development.
 
-## Standard Project Structure
+> **Nuxt 4 change:** The default `srcDir` is now `app/`. All Vue application code (`app.vue`, `components/`, `composables/`, `pages/`, etc.) lives inside `app/`, while `server/`, `shared/`, `public/`, `modules/`, `layers/` and `nuxt.config.ts` stay at the project root. (In Nuxt 3 these app directories lived at the root by default.)
+
+## Standard Project Structure (Nuxt 4)
 
 ```
 my-nuxt-app/
-├── app/                    # Application source (can be at root level)
+├── app/                    # srcDir — all Vue app code (default in Nuxt 4)
 │   ├── app.vue             # Root component
 │   ├── app.config.ts       # App configuration (runtime)
 │   ├── error.vue           # Error page
+│   ├── assets/             # Build-processed assets (CSS, images)
 │   ├── components/         # Auto-imported Vue components
 │   ├── composables/        # Auto-imported composables
 │   ├── layouts/            # Layout components
 │   ├── middleware/         # Route middleware
 │   ├── pages/              # File-based routing
-│   ├── plugins/            # Vue plugins
+│   ├── plugins/            # Nuxt plugins
 │   └── utils/              # Auto-imported utilities
-├── assets/                 # Build-processed assets (CSS, images)
-├── public/                 # Static assets (served as-is)
-├── server/                 # Server-side code
+├── server/                 # Server-side code (root level)
 │   ├── api/                # API routes (/api/*)
 │   ├── routes/             # Server routes
 │   ├── middleware/         # Server middleware
 │   ├── plugins/            # Nitro plugins
 │   └── utils/              # Server utilities (auto-imported)
+├── shared/                 # Code shared between app and server
+│   ├── utils/              # Auto-imported in both app and server
+│   └── types/              # Auto-imported types
+├── public/                 # Static assets (served as-is)
 ├── content/                # Content files (@nuxt/content)
 ├── layers/                 # Local layers (auto-scanned)
 ├── modules/                # Local modules
@@ -42,14 +47,25 @@ my-nuxt-app/
 
 ### `app/` Directory
 
-Contains all application code. Can also be at root level (without `app/` folder).
+The `app/` directory is the default `srcDir` in Nuxt 4 and holds all Vue application code. Customize it if needed:
 
 ```ts
 // nuxt.config.ts - customize source directory
 export default defineNuxtConfig({
-  srcDir: 'src/', // Change from 'app/' to 'src/'
+  srcDir: 'src/', // Use 'src/' instead of the default 'app/'
 })
 ```
+
+**Aliases** (Nuxt 4 defaults):
+
+| Alias | Resolves to |
+|-------|-------------|
+| `~` / `@` | `<rootDir>/app` (the srcDir) |
+| `~~` / `@@` | `<rootDir>` (project root) |
+| `#shared` | `<rootDir>/shared` |
+| `#server` | `<rootDir>/server` |
+
+Because `~` now points at `app/`, reference root-level files (modules, server handlers) with `~~` or the dedicated aliases — e.g. `~~/server/handler.ts` or `#server/handler.ts`.
 
 ### `app/components/`
 
@@ -182,7 +198,7 @@ plugins/
 
 ### `server/` Directory
 
-Nitro server code:
+Nitro server code (stays at the project root, not under `app/`):
 
 ```
 server/
@@ -200,6 +216,25 @@ server/
     └── db.ts            → Auto-imported server utilities
 ```
 
+### `shared/` Directory
+
+Code usable in **both** the Vue app and the Nitro server (Nuxt 3.14+). Cannot import any Vue or Nitro code.
+
+```
+shared/
+├── utils/
+│   └── format.ts        → Auto-imported in app AND server
+└── types/
+    └── api.ts           → Auto-imported types
+```
+
+Only top-level files in `shared/utils/` and `shared/types/` are auto-imported. Import anything else via the `#shared` alias:
+
+```ts
+import { capitalize } from '#shared/utils/format'
+import lower from '#shared/formatters/lower'
+```
+
 ### `public/` Directory
 
 Static assets served at root URL:
@@ -212,12 +247,12 @@ public/
     └── logo.png         → /images/logo.png
 ```
 
-### `assets/` Directory
+### `app/assets/` Directory
 
-Build-processed assets:
+Build-processed assets (under `app/` in Nuxt 4):
 
 ```
-assets/
+app/assets/
 ├── css/
 │   └── main.css
 ├── images/
@@ -263,7 +298,9 @@ Reference in components:
 
 <!-- 
 Source references:
-- https://nuxt.com/docs/directory-structure
-- https://nuxt.com/docs/directory-structure/app
-- https://nuxt.com/docs/directory-structure/server
+- https://nuxt.com/docs/4.x/directory-structure
+- https://nuxt.com/docs/4.x/directory-structure/app
+- https://nuxt.com/docs/4.x/directory-structure/server
+- https://nuxt.com/docs/4.x/directory-structure/shared
+- https://nuxt.com/docs/4.x/api/nuxt-config#alias
 -->

@@ -90,13 +90,15 @@ describe.concurrent('parallel tests', () => {
 })
 ```
 
-### Sequential in Concurrent
+### Opt Out of Concurrency
+
+`describe.sequential` was **removed in v5**. Use `{ concurrent: false }` to opt a suite out of inherited/global concurrency:
 
 ```ts
 describe.concurrent('parallel', () => {
   test('concurrent 1', async () => {})
-  
-  describe.sequential('must be sequential', () => {
+
+  describe('must be sequential', { concurrent: false }, () => {
     test('step 1', async () => {})
     test('step 2', async () => {})
   })
@@ -171,21 +173,21 @@ describe('Database', () => {
 
 ## Modifier Combinations
 
-All modifiers can be chained:
+Modifiers can be chained:
 
 ```ts
 describe.skip.concurrent('skipped concurrent', () => {})
 describe.only.shuffle('only and shuffled', () => {})
-describe.concurrent.skip('equivalent', () => {})
 ```
 
 ## Key Points
 
 - Top-level tests belong to an implicit file suite
-- Nested suites inherit parent's options (timeout, retry, etc.)
+- Nested suites inherit parent's options (timeout, retry, concurrency, etc.)
 - Hooks are scoped to their suite and nested suites
 - Use `describe.concurrent` with context's `expect` for snapshots
 - Shuffle order depends on `sequence.seed` config
+- `describe.sequential` was removed in v5 — use `{ concurrent: false }`
 
 <!-- 
 Source references:

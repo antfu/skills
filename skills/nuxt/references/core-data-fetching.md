@@ -12,6 +12,7 @@ Nuxt provides composables for SSR-friendly data fetching that prevent double-fet
 - `$fetch` - Basic fetch utility (use for client-side events)
 - `useFetch` - SSR-safe wrapper around $fetch (use for component data)
 - `useAsyncData` - SSR-safe wrapper for any async function
+- `createUseFetch` / `createUseAsyncData` - factories to build typed custom composables with baked-in defaults
 
 ## useFetch
 
@@ -107,6 +108,65 @@ const { data } = await useAsyncData('cart', async () => {
 </script>
 ```
 
+## Custom Fetchers: createUseFetch / createUseAsyncData
+
+Factory macros that produce a fully typed custom composable with pre-defined options. Must be an **exported** declaration inside `app/composables/` (Nuxt injects dedup keys at build time).
+
+```ts
+// app/composables/useAPI.ts
+export const useAPI = createUseFetch({
+  baseURL: 'https://api.nuxt.com',
+  // shared interceptors, headers, etc.
+  onResponseError({ response }) {
+    if (response.status === 401) navigateTo('/login')
+  },
+})
+```
+
+```vue
+<script setup lang="ts">
+// Same signature/return as useFetch, with defaults applied
+const { data } = await useAPI('/modules')
+// Caller can still override any option
+const { data: other } = await useAPI('/modules', { baseURL: 'https://other.com' })
+</script>
+```
+
+**Default vs Override mode:**
+
+```ts
+// Plain object → options act as DEFAULTS (caller can override)
+export const useAPI = createUseFetch({ baseURL: '/api', lazy: true })
+
+// Function → options OVERRIDE caller's (enforce auth/baseURL)
+export const useAPI = createUseFetch(callerOptions => ({
+  baseURL: 'https://api.nuxt.com', // always enforced
+}))
+```
+
+Use the **function form** when you need `useNuxtApp()` (called in setup context, not module scope):
+
+```ts
+// app/composables/useAPI.ts
+export const useAPI = createUseFetch(callerOptions => ({
+  $fetch: useNuxtApp().$api as typeof $fetch,
+  ...callerOptions,
+}))
+```
+
+`createUseAsyncData` works identically for wrapping arbitrary async functions:
+
+```ts
+// app/composables/useCachedData.ts
+export const useCachedData = createUseAsyncData({
+  getCachedData(key, nuxtApp) {
+    return nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
+  },
+})
+```
+
+> Replaces the old "don't await your custom `useFetch` wrapper" caveat — use these factories instead of hand-rolled wrappers.
+
 ## $fetch
 
 For client-side events (form submissions, button clicks):
@@ -130,12 +190,15 @@ All composables return:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `data` | `Ref<T>` | Fetched data |
+| `data` | `Ref<T>` | Fetched data (`undefined` until resolved) |
 | `error` | `Ref<Error>` | Error if request failed |
 | `status` | `Ref<'idle' \| 'pending' \| 'success' \| 'error'>` | Request status |
+| `pending` | `Ref<boolean>` | Whether a request is in progress |
 | `refresh` | `() => Promise` | Refetch data |
 | `execute` | `() => Promise` | Alias for refresh |
-| `clear` | `() => void` | Reset data and error |
+| `clear` | `() => void` | Reset to default/idle and cancel pending requests |
+
+> Prefer `status` over `pending` for fine-grained state. `useFetch` no longer accepts a top-level `timeout` option (still available on `useAsyncData`); use a `cache` option (`'default'`, `'no-store'`, `false`, etc.) for Fetch cache control.
 
 ## Lazy Fetching
 
@@ -230,7 +293,10 @@ const data = await $fetch('/api/user', { headers })
 
 <!-- 
 Source references:
-- https://nuxt.com/docs/getting-started/data-fetching
-- https://nuxt.com/docs/api/composables/use-fetch
-- https://nuxt.com/docs/api/composables/use-async-data
+- https://nuxt.com/docs/4.x/getting-started/data-fetching
+- https://nuxt.com/docs/4.x/api/composables/use-fetch
+- https://nuxt.com/docs/4.x/api/composables/use-async-data
+- https://nuxt.com/docs/4.x/api/composables/create-use-fetch
+- https://nuxt.com/docs/4.x/api/composables/create-use-async-data
+- https://nuxt.com/docs/4.x/guide/recipes/custom-usefetch
 -->

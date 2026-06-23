@@ -124,4 +124,4 @@ Both tools require a `package.json` in your project directory.
 ## Related Options
 
 - [CI Environment](advanced-ci.md) - CI-aware option details
-- [Package Exports](option-package-exports.md) - Auto-generate exports field
+- [Package Exports](option-package-exports.md) - Generate exports field

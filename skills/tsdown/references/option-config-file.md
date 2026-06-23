@@ -131,21 +131,31 @@ tsdown # Uses auto loader
 
 ### Native Loader
 
-Uses runtime's native TypeScript support (Node.js 23+, Bun, Deno):
+Uses runtime's native TypeScript support (Node.js 22.18.0+, Bun, Deno):
 
 ```bash
 tsdown --config-loader native
 ```
 
-### Unrun Loader
+### tsx Loader
 
-Uses [unrun](https://gugustinette.github.io/unrun/) library for loading:
+Uses [tsx](https://tsx.is/) library for loading via its tsImport API. Note: `tsx` is an optional peer dependency — install it manually first.
 
 ```bash
+pnpm add -D tsx
+tsdown --config-loader tsx
+```
+
+### Unrun Loader
+
+Uses [unrun](https://gugustinette.github.io/unrun/) library for loading. Note: `unrun` is an optional peer dependency — install it manually first.
+
+```bash
+pnpm add -D unrun
 tsdown --config-loader unrun
 ```
 
-**Tip:** Use `unrun` loader if you need to load TypeScript configs without file extensions in Node.js.
+**Tip:** Use `tsx` or `unrun` loader if you need to load TypeScript configs without file extensions in Node.js.
 
 ## Custom Config Path
 

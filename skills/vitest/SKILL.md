@@ -3,7 +3,7 @@ name: vitest
 description: Vitest fast unit testing framework powered by Vite with Jest-compatible API. Use when writing tests, mocking, configuring coverage, or working with test filtering and fixtures.
 metadata:
   author: Anthony Fu
-  version: "2026.1.28"
+  version: "2026.6.22"
   source: Generated from https://github.com/vitest-dev/vitest, scripts located at https://github.com/antfu/skills
 ---
 
@@ -18,7 +18,7 @@ Vitest is a next-generation testing framework powered by Vite. It provides a Jes
 - Built-in coverage via V8 or Istanbul
 - Snapshot testing, mocking, and spy utilities
 
-> The skill is based on Vitest 3.x, generated at 2026-01-28.
+> The skill is based on Vitest 5.x (beta), generated at 2026-06-22.
 
 ## Core
 
@@ -41,6 +41,9 @@ Vitest is a next-generation testing framework powered by Vite. It provides a Jes
 | Test Context | Test fixtures, context.expect, test.extend for custom fixtures | [features-context](references/features-context.md) |
 | Concurrency | Concurrent tests, parallel execution, sharding | [features-concurrency](references/features-concurrency.md) |
 | Filtering | Filter tests by name, file patterns, tags | [features-filtering](references/features-filtering.md) |
+| Test Tags | Label tests with tags to filter runs and apply shared options | [features-test-tags](references/features-test-tags.md) |
+| Reporters | Built-in reporters, default selection, CI/output config | [features-reporters](references/features-reporters.md) |
+| Benchmarking | Write benchmarks with the bench fixture (Tinybench) | [features-benchmarking](references/features-benchmarking.md) |
 
 ## Advanced
 

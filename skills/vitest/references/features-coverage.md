@@ -28,19 +28,15 @@ defineConfig({
       // Reporters
       reporter: ['text', 'json', 'html'],
       
-      // Files to include
+      // v4: define `include` to report uncovered files too.
+      // Without it, only files loaded during the run are reported.
       include: ['src/**/*.{ts,tsx}'],
       
-      // Files to exclude
+      // Exclusion is applied to files matched by `include`
       exclude: [
-        'node_modules/',
-        'tests/',
         '**/*.d.ts',
         '**/*.test.ts',
       ],
-      
-      // Report uncovered files
-      all: true,
       
       // Thresholds
       thresholds: {
@@ -64,6 +60,7 @@ npm i -D @vitest/coverage-v8
 
 - Faster, no pre-instrumentation
 - Uses V8's native coverage
+- v4 uses **AST-based remapping** (as accurate as Istanbul); expect coverage numbers to shift when upgrading from v3
 - Recommended for most projects
 
 ### Istanbul
@@ -110,6 +107,9 @@ coverage: {
     
     // Auto-update thresholds (for gradual improvement)
     autoUpdate: true,
+
+    // v5: glob thresholds no longer inherit top-level `perFile` — set it per glob
+    'src/utils/**': { lines: 80, perFile: true },
   },
 }
 ```
@@ -183,7 +183,7 @@ Run with `vitest --ui` to view coverage visually.
 
 ## Coverage with Sharding
 
-Merge coverage from sharded runs:
+Merge coverage from sharded runs (blobs default to `.vitest/blob/`):
 
 ```bash
 vitest run --shard=1/3 --coverage --reporter=blob
@@ -193,13 +193,20 @@ vitest run --shard=3/3 --coverage --reporter=blob
 vitest --merge-reports --coverage --reporter=json
 ```
 
+## v4 Changes
+
+- **`coverage.all` and `coverage.extensions` removed** — only covered files are reported unless `coverage.include` is set.
+- **`coverage.ignoreEmptyLines` removed**; lines without runtime code are no longer counted.
+- **`coverage.experimentalAstAwareRemapping` removed** — AST remapping is the default and only mode for V8.
+- Programmatic coverage APIs moved from `vitest/coverage` to `vitest/node`.
+
 ## Key Points
 
 - V8 is faster, Istanbul is more compatible
 - Use `--coverage` flag or `coverage.enabled: true`
-- Include `all: true` to see uncovered files
+- Define `coverage.include` to report uncovered source files
 - Set thresholds to enforce minimum coverage
-- Use `@preserve` comment to keep ignore hints
+- Use `@preserve` comment to keep ignore hints (e.g. `/* v8 ignore next -- @preserve */`)
 
 <!-- 
 Source references:

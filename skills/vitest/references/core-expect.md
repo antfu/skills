@@ -98,6 +98,32 @@ expect(fn).toHaveBeenNthCalledWith(1, 'arg1', 'arg2')
 
 expect(fn).toHaveReturned()
 expect(fn).toHaveReturnedWith(value)
+
+// v4 additions
+expect(fn).toHaveBeenCalledExactlyOnceWith('arg1', 'arg2')
+expect(fnA).toHaveBeenCalledBefore(fnB)
+expect(fnA).toHaveBeenCalledAfter(fnB)
+```
+
+### Chai-Style Spy Assertions (4.1+)
+
+Sinon-chai-compatible aliases, useful when migrating from Sinon:
+
+```ts
+expect(spy).to.have.been.called
+expect(spy).to.have.been.calledOnce
+expect(spy).to.have.been.calledWith('arg1', 'arg2')
+expect(spy).to.have.been.calledOnceWith('arg')
+```
+
+### Conditional Mock Exhaustion (v5)
+
+Assert every `vi.when` behavior was consumed:
+
+```ts
+const w = vi.when(spy).calledWith(1).thenReturnOnce('a')
+spy(1)
+expect(w).toHaveBeenExhausted()
 ```
 
 ## Asymmetric Matchers
@@ -134,16 +160,47 @@ expect({ value: null }).toEqual({
 expect([1, 2]).toEqual(
   expect.not.arrayContaining([3])
 )
+
+// toBeOneOf - value matches any option (great for optional props)
+expect(user).toEqual({
+  name: expect.any(String),
+  middleName: expect.toBeOneOf([expect.any(String), undefined]),
+})
+
+// schemaMatching (4.0+) - matches any Standard Schema (Zod, Valibot, ArkType)
+import { z } from 'zod'
+expect(payload).toEqual({
+  email: expect.schemaMatching(z.string().email()),
+})
+expect(repo.save).toHaveBeenCalledWith(expect.schemaMatching(UserSchema))
 ```
 
 ## Soft Assertions
 
-Continue test after failure:
+Prefer `expect.soft` for **non-critical assertions** — it marks the test failed but continues so all failures are reported together:
 
 ```ts
-expect.soft(1).toBe(2) // Marks test failed but continues
-expect.soft(2).toBe(3) // Also runs
-// All failures reported at end
+expect.soft(response.status).toBe(200) // non-critical, keeps going
+expect.soft(response.headers.get('x-id')).toBeTruthy()
+expect(response.body).toBeDefined() // critical: hard expect stops on failure
+```
+
+## Type-Narrowing Assertions (4.0+)
+
+`expect.assert` throws at runtime **and** narrows the TypeScript type (unlike `toBeTruthy`/`toBeDefined`, which return `void`):
+
+```ts
+const user = cache.get('alice') // { id, name } | undefined
+expect.assert(user)             // throws if undefined, narrows below
+expect(user.name).toBe('Alice') // no `!`, no `as`
+
+// Narrows typeof / instanceof too
+expect.assert(typeof input === 'string')
+input.toUpperCase()
+
+// Chai assert helpers via the same namespace
+expect.assert.isDefined(maybeUser)
+expect.assert.instanceOf(error, MyError)
 ```
 
 ## Poll Assertions
@@ -212,8 +269,12 @@ expect(() => throw new Error('fail')).toThrowErrorMatchingSnapshot()
 - Always `await` async assertions (`resolves`, `rejects`, `poll`)
 - Use context's `expect` in concurrent tests for correct tracking
 - `toThrow` requires wrapping sync code in a function
+- Use `expect.soft` for non-critical assertions; reserve hard `expect` for must-pass conditions
+- Use `expect.assert` (not `toBeTruthy`) when you also need TypeScript narrowing
 
 <!-- 
 Source references:
 - https://vitest.dev/api/expect.html
+- https://vitest.dev/guide/recipes/type-narrowing
+- https://vitest.dev/guide/recipes/schema-matching
 -->

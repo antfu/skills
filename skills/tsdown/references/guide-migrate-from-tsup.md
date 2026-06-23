@@ -42,6 +42,16 @@ npx tsdown-migrate packages/foo packages/bar
 | `dts` | `false` | Auto-enabled if `types`/`typings` in package.json |
 | `target` | Manual | Auto-read from `engines.node` in package.json |
 
+### Option Renames
+
+| tsup | tsdown |
+|------|--------|
+| `outExtension` | `outExtensions` |
+
+### Output Filename Differences
+
+For IIFE builds, `tsdown` emits `[name].iife.js`; `tsup` commonly emitted `[name].global.js`. `outExtensions` customizes extensions or suffixes, but it does not remove `.iife` or `.umd`. Use `outputOptions.entryFileNames: '[name].global.js'` to preserve old IIFE filenames.
+
 ### New Features in tsdown
 
 #### Node Protocol Control
@@ -160,7 +170,7 @@ Some tsup features are not yet available. Check [GitHub issues](https://github.c
 
 ### Build Fails After Migration
 
-1. **Check Node.js version** - Requires Node.js 20.19+
+1. **Check Node.js version** - Requires Node.js 22.18.0+ to run tsdown itself. The bundled output can still target lower Node.js versions via `target`; if you need to support Node.js 18 / 20, build with Node.js 22+ in CI and test the produced output (or packed tarball) on the lower versions.
 2. **Install TypeScript** - Required for DTS generation
 3. **Review config changes** - Ensure format and options are correct
 4. **Check dependencies** - Verify all dependencies are installed
@@ -182,7 +192,7 @@ tsdown should be faster than tsup. If not:
 
 - [GitHub Issues](https://github.com/rolldown/tsdown/issues) - Report bugs or request features
 - [Documentation](https://tsdown.dev) - Full documentation
-- [Migration Tool](https://github.com/rolldown/tsdown/tree/main/packages/tsdown-migrate) - Source code
+- [Migration Tool](https://github.com/rolldown/tsdown/tree/main/packages/migrate) - Source code
 
 ## Acknowledgements
 
