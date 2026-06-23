@@ -1,6 +1,6 @@
 ---
 name: core-design-read
-description: Read the brief before building. Infer page kind, audience, and vibe, declare a one-line design read, then set three dials (variance, motion, density) using an antfu tooling baseline or a marketing baseline.
+description: Read the brief before building. Infer page kind, audience, and vibe, declare a one-line design read, then set three dials (variance, motion, density) using the Tooling baseline or the Marketing baseline.
 ---
 
 # Design Read and Dials
@@ -41,12 +41,15 @@ Tune every layout, motion, and density choice against three dials (1 to 10):
 
 ### Two baselines
 
-| Context | VARIANCE | MOTION | DENSITY |
-|---------|----------|--------|---------|
-| antfu tooling / devtools / dashboards (default) | 2 to 3 | 2 to 3 | 7 to 9 |
-| Marketing / landing / portfolio | 7 to 8 | 5 to 7 | 3 to 4 |
+| Baseline | VARIANCE | MOTION | DENSITY |
+|----------|----------|--------|---------|
+| Tooling | 2 to 3 | 2 to 3 | 7 to 9 |
+| Marketing | 7 to 8 | 5 to 7 | 3 to 4 |
 
-Tooling UIs are information-dense and quiet: tight spacing, mono numbers, minimal motion. Marketing pages breathe and move. Override either baseline only when the design read calls for it.
+- **Tooling** (the antfu default): devtools, dashboards, app shells. Information-dense and quiet: tight spacing, mono numbers, minimal motion.
+- **Marketing**: landing pages, portfolios, product pages. They breathe and move.
+
+Override either baseline only when the design read calls for it.
 
 ### What the dials drive
 

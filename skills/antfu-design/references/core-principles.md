@@ -10,6 +10,7 @@ description: Framework-agnostic UnoCSS design principles with semantic shortcuts
 - Define visual meaning once in `shortcuts` and reuse it everywhere.
 - Keep app code semantic (`bg-base`, `border-base`, `btn-action`) instead of raw color values.
 - Treat tokens as API surface: rename rarely, extend intentionally.
+- Shortcuts are names, not utilities: you cannot apply modifiers to them. `border-base/60` is invalid, since a shortcut does not accept an opacity suffix. When you need a new variation, define a new token (for example `border-base-strong`) instead of modifying an existing one.
 
 ## Extracted Design Philosophy
 

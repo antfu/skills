@@ -27,6 +27,7 @@ Use this as a hard checklist before returning UI code.
 - Do not emit Attributify-style utility attributes in generated examples.
 - Do not build icon class names via interpolation that UnoCSS cannot statically detect.
 - Do not design only for one theme; avoid light-only or dark-only primitives.
+- Do not apply modifiers to semantic shortcuts (`border-base/60` is invalid); define a new token for a new variation.
 - Do not emit the em-dash (U+2014) or en-dash (U+2013) in any user-facing text (best-practices-anti-slop).
 - Do not ship AI-slop tells: generic names, fake-perfect numbers, AI-purple defaults, or div-based fake screenshots.
 - Do not use `transition: all`; specify exact properties.

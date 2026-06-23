@@ -78,7 +78,6 @@ shortcuts: [
 
 | Topic | Description | Reference |
 |-------|-------------|-----------|
-| Design System Map | When to defer to an official system vs the UnoCSS token system | [advanced-design-systems-map](references/advanced-design-systems-map.md) |
 | Pattern Vocabulary | Named UI patterns to recognize and reach for | [advanced-pattern-vocabulary](references/advanced-pattern-vocabulary.md) |
 | Redesign Protocol | Detect mode, audit first, preserve IA and SEO | [advanced-redesign-protocol](references/advanced-redesign-protocol.md) |
 
