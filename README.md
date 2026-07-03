@@ -18,6 +18,20 @@ or to install all of them globally:
 pnpx skills add antfu/skills --skill='*' -g
 ```
 
+For Autohand Code, copy or symlink the skill folders you want into the global or project skill path:
+
+```bash
+# Global install
+mkdir -p ~/.autohand/skills/
+cp -R skills/vue skills/nuxt skills/vite ~/.autohand/skills/
+
+# Project-level install
+mkdir -p .autohand/skills/
+ln -s "$(pwd)/skills/antfu" .autohand/skills/antfu
+```
+
+Autohand also supports `autohand --skill-install` for cataloged skills, with `--project` for workspace-level installs. Until this collection is listed there, use the direct copy or symlink paths above.
+
 Learn more about the CLI usage at [skills](https://github.com/vercel-labs/skills).
 
 ## Skills
