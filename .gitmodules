@@ -43,3 +43,6 @@
 [submodule "sources/nitro"]
 	path = sources/nitro
 	url = https://github.com/nitrojs/nitro
+[submodule "vendor/uizze"]
+	path = vendor/uizze
+	url = https://github.com/uizze/uizze

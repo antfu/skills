@@ -66,6 +66,7 @@ Synced from external repositories that maintain their own skills.
 | [vue-router-best-practices](skills/vue-router-best-practices) | Vue Router best practices | [vuejs-ai/skills](https://github.com/vuejs-ai/skills) |
 | [vue-testing-best-practices](skills/vue-testing-best-practices) | Vue testing best practices | [vuejs-ai/skills](https://github.com/vuejs-ai/skills) |
 | [web-design-guidelines](skills/web-design-guidelines) | Web design guidelines for building beautiful interfaces | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) |
+| [anti-ui-slop](skills/anti-ui-slop) | Product-specific UI direction, required states, and a finish gate grounded in 800,000+ real web and iOS screens | [uizze/uizze](https://github.com/uizze/uizze) |
 
 ## FAQ
 

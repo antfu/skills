@@ -66,6 +66,12 @@ export const vendors: Record<string, VendorSkillMeta> = {
       'web-design-guidelines': 'web-design-guidelines',
     },
   },
+  'uizze': {
+    source: 'https://github.com/uizze/uizze',
+    skills: {
+      'anti-ui-slop': 'anti-ui-slop',
+    },
+  },
 }
 
 /**
