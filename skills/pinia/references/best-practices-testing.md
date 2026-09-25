@@ -95,6 +95,35 @@ const wrapper = mount(Counter, {
 
 ## Action Stubbing
 
+### Stubbing Limitations in Setup Stores
+
+`stubActions` only replaces actions on the store *instance*. In a **Setup store**, an action that calls another action via its closed-over function reference bypasses the stub:
+
+```js
+export const useCounterStore = defineStore('counter', () => {
+  function increment() { /* ... */ }
+
+  function incrementTwice() {
+    increment() // ❌ closed-over reference — stub never used
+    increment()
+  }
+
+  return { increment, incrementTwice }
+})
+```
+
+Stubbing affects `store.increment()` but not the internal calls in `incrementTwice()`. **Options stores don't have this issue** — internal `this.increment()` calls go through the store instance and hit the stub.
+
+To make an internal call stubbable in a Setup store, route it through the store (overkill just for a test — prefer testing the real implementation instead):
+
+```js
+function incrementTwice() {
+  const store = useCounterStore()
+  store.increment() // ✅ goes through the store, uses the stub
+  store.increment()
+}
+```
+
 ### Execute Real Actions
 
 ```ts

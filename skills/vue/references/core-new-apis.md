@@ -55,6 +55,17 @@ readonlyState.count++  // Warning, mutation blocked
 
 Note: `reactive()` loses reactivity on destructuring. Use `ref()` or `toRefs()`.
 
+### Inspecting reactive values
+
+```ts
+import { isRef, isReactive, isReadonly, isProxy, isShallow, unref, toRaw } from 'vue'
+
+isShallow(shallowRef(0))   // true, also true for shallowReactive/shallowReadonly
+isShallow(ref(0))          // false
+```
+
+`isShallow()` reports whether a proxy was created with `shallowRef`, `shallowReactive()`, or `shallowReadonly()`.
+
 ## Watchers
 
 ### watch

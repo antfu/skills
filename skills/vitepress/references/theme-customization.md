@@ -48,6 +48,26 @@ Override root CSS variables:
 
 See [all CSS variables](https://github.com/vuejs/vitepress/blob/main/src/client/theme-default/styles/vars.css).
 
+### Navbar (v2)
+
+The navbar draws a single background surface controlled by CSS variables, so a
+frosted-glass bar needs no component overrides:
+
+```css
+:root {
+  --vp-nav-height: 4rem;
+  --vp-nav-bg-color: color-mix(in srgb, var(--vp-c-bg) 65%, transparent);
+  --vp-nav-home-bg-color: transparent; /* while unscrolled on the home page */
+  --vp-nav-backdrop-filter: saturate(180%) blur(8px);
+  --vp-nav-divider-color: var(--vp-c-gutter);
+  --vp-nav-screen-bg-color: var(--vp-c-bg);
+}
+```
+
+When nav items don't fit, they collapse into a `⋯` overflow menu (label it with
+`extraMenuLabel`). Note `backdrop-filter` has a scroll cost and Safari ≤17 skips
+variable-driven backdrop filters.
+
 ## Home Hero Customization
 
 ```css
@@ -179,7 +199,7 @@ const { Layout } = DefaultTheme
 **Home layout (`layout: home`):**
 - `home-hero-before`, `home-hero-after`
 - `home-hero-info-before`, `home-hero-info`, `home-hero-info-after`
-- `home-hero-actions-after`, `home-hero-image`
+- `home-hero-actions-before-actions`, `home-hero-actions-after`, `home-hero-image`
 - `home-features-before`, `home-features-after`
 
 **Page layout (`layout: page`):**
@@ -276,13 +296,66 @@ provide('toggle-appearance', async ({ clientX: x, clientY: y }) => {
 </template>
 ```
 
+## Icons (v2)
+
+Render iconify icons through VitePress's pipeline (no external fetch). Use the
+`VPIcon` component from `vitepress/theme` (accepts `collection:name` or `{ svg }`):
+
+```vue-html
+<VPIcon icon="lucide:rocket" />
+```
+
+Or the `useIcon` composable, passing the element ref so dev mode can resolve it:
+
+```vue
+<script setup>
+import { useIcon } from 'vitepress'
+import { useTemplateRef } from 'vue'
+
+const el = useTemplateRef('el')
+const iconClass = useIcon('lucide:rocket', el)
+</script>
+
+<template><span ref="el" :class="iconClass" /></template>
+```
+
+Client-only icons (inside `<ClientOnly>`) aren't collected during build — list
+them in [`icons.include`](core-config.md).
+
+## Route Change Hooks & `setup` (v2)
+
+Assign navigation handlers on the router (return `false` to cancel), and use the
+`setup` hook to run Composition API code inside the root component's `setup()`:
+
+```ts
+// .vitepress/theme/index.ts
+import { watch } from 'vue'
+import { useData } from 'vitepress'
+import DefaultTheme from 'vitepress/theme'
+
+export default {
+  extends: DefaultTheme,
+  enhanceApp({ router }) {
+    router.onBeforeRouteChange = (to) => { /* return false to cancel */ }
+    router.onAfterRouteChange = (to) => console.log('navigated to', to)
+  },
+  setup() {
+    const { page } = useData()
+    watch(() => page.value.relativePath, (p) => console.log('now viewing', p))
+  }
+}
+```
+
+`setup` also runs during SSR/SSG — keep browser-only work in `onMounted`.
+
 ## Key Points
 
 - Import `vitepress/theme-without-fonts` to use custom fonts
 - Use layout slots to inject content without overriding components
 - Global components are registered in `enhanceApp`
-- Override CSS variables for theming
+- Override CSS variables for theming (v2 adds navbar surface variables)
 - Use Vite aliases to replace internal components
+- v2: `VPIcon`/`useIcon` for iconify icons, router `onBeforeRouteChange`/`onAfterRouteChange`, and a theme `setup` hook
 
 <!--
 Source references:

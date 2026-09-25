@@ -30,6 +30,14 @@ export default {
 }
 ```
 
+### Relocatable Builds (v2)
+
+When the final URL isn't known at build time (IPFS gateways, archives, docs
+bundled into an app, `file://`), set `base: './'`. Every page then references
+assets/pages relative to its own location and the same build works from any
+sub-path without rebuilding. Keep `cleanUrls` off, avoid root-absolute `head`
+paths, and use Markdown link syntax for site-absolute links.
+
 ## GitHub Pages
 
 Create `.github/workflows/deploy.yml`:
@@ -62,6 +70,12 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - name: Cache VitePress
+        uses: actions/cache@v4
+        with:
+          path: docs/.vitepress/cache
+          key: ${{ runner.os }}-vitepress-${{ hashFiles('docs/**', 'package-lock.json') }}
+          restore-keys: ${{ runner.os }}-vitepress-
       - run: npm ci
       - run: npm run docs:build
       - uses: actions/upload-pages-artifact@v3
@@ -97,7 +111,7 @@ Configure in dashboard:
 |---------|-------|
 | Build Command | `npm run docs:build` |
 | Output Directory | `docs/.vitepress/dist` |
-| Node Version | `20` (or above) |
+| Node Version | `22` (or above) |
 
 **Warning:** Don't enable "Auto Minify" for HTML - it removes Vue hydration comments.
 
@@ -116,7 +130,7 @@ For clean URLs, add `vercel.json`:
 Create `.gitlab-ci.yml`:
 
 ```yaml
-image: node:18
+image: node:24
 
 pages:
   cache:
@@ -151,29 +165,37 @@ npm run docs:build
 firebase deploy
 ```
 
-## Nginx
+## nginx
+
+Serve static files, cache hashed assets, and handle `cleanUrls: true`:
 
 ```nginx
-server {
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml;
+map $uri $cache_control {
+    ~^/assets/  "public, max-age=31536000, immutable";
+    default     "no-cache";
+}
 
-    listen 80;
-    server_name _;
+server {
+    listen 8080;
+    root /usr/share/nginx/html;
     index index.html;
+    absolute_redirect off;
+
+    add_header Cache-Control $cache_control always;
 
     location / {
-        root /app;
-        try_files $uri $uri.html $uri/ =404;
-        error_page 404 /404.html;
-        error_page 403 /404.html;
+        try_files $uri $uri.html $uri/index.html =404;
     }
 
-    # Cache hashed assets
-    location ~* ^/assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
+    # redirect /foo/ -> /foo when foo.html exists (clean URLs)
+    location ~ ^(?<page>.+)/$ {
+        if (-f $document_root$page.html) {
+            return 301 $page$is_args$args;
+        }
+        try_files $page/index.html =404;
     }
+
+    error_page 404 /404.html;
 }
 ```
 
@@ -219,20 +241,23 @@ Place in `docs/public/_headers`:
 
 | Platform | Guide |
 |----------|-------|
-| Azure Static Web Apps | Set `app_location: /`, `output_location: docs/.vitepress/dist` |
+| Azure | Set `app_location: /`, `output_location: docs/.vitepress/dist` |
 | Surge | `npx surge docs/.vitepress/dist` |
+| harvis | `npx harvis docs/.vitepress/dist` |
 | Heroku | Use `heroku-buildpack-static` |
 | Render | Build: `npm run docs:build`, Publish: `docs/.vitepress/dist` |
-| Kinsta | Follow [Kinsta docs](https://kinsta.com/docs/vitepress-static-site-example/) |
+| Stormkit / CloudRay / Hostinger / Lizard | Follow each provider's VitePress guide |
 
 ## Key Points
 
-- Set `base` for sub-path deployments
+- Set `base` for sub-path deployments; `base: './'` for relocatable builds (v2)
+- Node.js 22+ required (v2)
 - GitHub Pages requires workflow file and enabling Pages in settings
+- Cache `docs/.vitepress/cache` in CI to speed up builds
 - Most platforms: Build `npm run docs:build`, output `docs/.vitepress/dist`
 - Don't enable HTML minification (breaks hydration)
 - Cache `/assets/*` with immutable headers
-- For clean URLs on Nginx, use `try_files $uri $uri.html $uri/ =404`
+- For clean URLs on nginx, use `try_files $uri $uri.html $uri/index.html =404`
 
 <!--
 Source references:

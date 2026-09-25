@@ -7,9 +7,9 @@ description: Nuxt project folder structure, conventions, and file organization
 
 Nuxt uses a conventions-based directory structure. Understanding it is key to effective development.
 
-> **Nuxt 4 change:** The default `srcDir` is now `app/`. All Vue application code (`app.vue`, `components/`, `composables/`, `pages/`, etc.) lives inside `app/`, while `server/`, `shared/`, `public/`, `modules/`, `layers/` and `nuxt.config.ts` stay at the project root. (In Nuxt 3 these app directories lived at the root by default.)
+> **Directory layout:** The default `srcDir` is `app/`. All Vue application code (`app.vue`, `components/`, `composables/`, `pages/`, etc.) lives inside `app/`, while `server/`, `shared/`, `public/`, `modules/`, `layers/` and `nuxt.config.ts` stay at the project root.
 
-## Standard Project Structure (Nuxt 4)
+## Standard Project Structure
 
 ```
 my-nuxt-app/
@@ -212,9 +212,13 @@ server/
 │   └── auth.ts          → Runs on every request
 ├── plugins/
 │   └── db.ts            → Server startup plugins
+├── types/
+│   └── todo.ts          → Auto-imported types (server context only)
 └── utils/
     └── db.ts            → Auto-imported server utilities
 ```
+
+**Nuxt 5 server imports:** Nitro/h3 helpers (`defineEventHandler`, `getQuery`, `createError`…) are **no longer auto-imported by default** — import them from `nuxt/server`. Your own `server/utils/` and `server/types/` exports are still auto-imported. Inside server code, import shared Nuxt composables from `#imports/server` (not `#imports`). Re-enable Nitro auto-imports with `experimental.nitroAutoImports: true`.
 
 ### `shared/` Directory
 
@@ -298,9 +302,10 @@ Reference in components:
 
 <!-- 
 Source references:
-- https://nuxt.com/docs/4.x/directory-structure
-- https://nuxt.com/docs/4.x/directory-structure/app
-- https://nuxt.com/docs/4.x/directory-structure/server
-- https://nuxt.com/docs/4.x/directory-structure/shared
-- https://nuxt.com/docs/4.x/api/nuxt-config#alias
+- https://nuxt.com/docs/directory-structure
+- https://nuxt.com/docs/directory-structure/app
+- https://nuxt.com/docs/directory-structure/server
+- https://nuxt.com/docs/directory-structure/shared
+- https://nuxt.com/docs/guide/going-further/server-imports
+- https://nuxt.com/docs/api/nuxt-config#alias
 -->

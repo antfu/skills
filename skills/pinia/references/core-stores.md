@@ -191,6 +191,8 @@ cartStore.$subscribe(callback, { flush: 'sync' }) // Immediate
 cartStore.$subscribe(callback, { detached: true }) // Keep after unmount
 ```
 
+**`flush: 'sync'` caveats:** it runs the callback after *every* state change instead of batching, so it can hurt performance if the callback is heavy or state changes often. It also matters for correctness in one niche case: a **direct** mutation (e.g. `store.count++`) happening synchronously right after a `$patch()` in the same tick won't trigger a non-sync subscription on its own — use `flush: 'sync'` if you must be notified of every such mutation.
+
 ---
 
 ## Getters

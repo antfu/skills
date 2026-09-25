@@ -77,14 +77,16 @@ export default definePlugin((nitroApp) => {
 
 ## Notes
 
-- `runtimeHooks` are auto-enabled when at least one plugin exists; force with `features.runtimeHooks: true`.
+- `features.runtimeHooks` is auto-enabled when at least one plugin exists; force with `features.runtimeHooks: true`.
 - `NitroRuntimeHooks` is augmentable — presets add platform hooks (e.g. Cloudflare `cloudflare:scheduled`, `cloudflare:email`; Vercel `vercel:queue`).
-- Outside plugins, use `useNitroHooks()` (instead of `useNitroApp().hooks`) to guarantee a hooks instance.
+- `useNitroApp`, `useNitroHooks`, and `getRouteRules` are imported from `nitro/app` (no auto-imports in v3). Outside plugins, prefer `useNitroHooks()` over `useNitroApp().hooks` to guarantee a hooks instance.
+- The `hook()` method returns an unregister function.
+- For internal requests to your own server, use `serverFetch` from `nitro` (v2 `localFetch` is gone).
 
 ## Key Points
 
 - Plugins run once at startup; use them to init resources and register hooks.
-- Import `definePlugin` from `nitro` (not `defineNitroPlugin`).
+- Import `definePlugin` from `nitro` (not `defineNitroPlugin`); `useNitroApp`/`useNitroHooks` from `nitro/app`.
 - Use `request`/`response`/`error`/`close` hooks for cross-cutting runtime behavior.
 - Customize response headers in the `response` hook via `res.headers`.
 

@@ -83,6 +83,14 @@ Since v11, a downloaded tarball whose hash doesn't match `pnpm-lock.yaml` is a h
 pnpm install --update-checksums   # narrow opt-in after verifying the new bytes
 ```
 
+## Pin packages to their registry
+
+If you install from more than one registry, use `namedRegistries` aliases for packages that must come from a specific one. Since v11.20.0 pnpm records these under registry-qualified lockfile keys (`<name>@<registryName>:<version>`), so a package can't be silently substituted by another registry publishing the same name/version.
+
+## Lockfile scanners: two-document lockfile
+
+`pnpm-lock.yaml` may be a two-document file. A vulnerability scanner or SBOM generator that reads only the first document reports "no dependencies" (and no vulnerabilities) without failing — verify your tooling handles both documents.
+
 ## Trusted store/cache
 
 The content-addressable store, global virtual store, and metadata cache are part of pnpm's trust domain. Share them only between mutually trusting users/jobs and protect with filesystem permissions. `verifyStoreIntegrity` (default `true`) detects accidental corruption but does not make a writable-by-untrusted store safe.
@@ -96,10 +104,10 @@ The content-addressable store, global virtual store, and metadata cache are part
 
 <!--
 Source references:
-- https://pnpm.io/settings#allowbuilds
+- https://pnpm.io/settings/build#allowbuilds
 - https://pnpm.io/cli/approve-builds
-- https://pnpm.io/settings#minimumreleaseage
-- https://pnpm.io/settings#trustpolicy
-- https://pnpm.io/settings#blockexoticsubdeps
+- https://pnpm.io/settings/dependency-resolution#minimumreleaseage
+- https://pnpm.io/settings/dependency-resolution#trustpolicy
+- https://pnpm.io/settings/dependency-resolution#blockexoticsubdeps
 - https://pnpm.io/supply-chain-security
 -->

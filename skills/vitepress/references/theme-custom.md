@@ -33,7 +33,10 @@ interface Theme {
   // Optional: Enhance Vue app instance
   enhanceApp?: (ctx: EnhanceAppContext) => Awaitable<void>
   
-  // Optional: Extend another theme
+  // Optional (v2): runs inside the root component's setup()
+  setup?: () => void
+  
+  // Optional: Extend another theme (its enhanceApp & setup run first)
   extends?: Theme
 }
 
@@ -110,6 +113,17 @@ const router = useRouter()
 // Navigate programmatically
 const goToGuide = () => router.go('/guide/')
 </script>
+```
+
+### Route Change Hooks (v2)
+
+Assign handlers on the router instance (also available via `enhanceApp`'s
+`router`). Return `false` from `onBeforeRouteChange`/`onBeforePageLoad` to cancel:
+
+```ts
+const router = useRouter()
+router.onBeforeRouteChange = (to) => { /* return false to cancel */ }
+router.onAfterRouteChange = (to) => console.log('navigated to', to)
 ```
 
 ## Built-in Components
@@ -240,14 +254,15 @@ export default {
 
 ## Theme Config Types
 
-For custom theme config types:
+For custom theme config types, pass the type to `defineConfig` (v2 —
+`defineConfigWithTheme` is deprecated):
 
 ```ts
 // .vitepress/config.ts
-import { defineConfigWithTheme } from 'vitepress'
+import { defineConfig } from 'vitepress'
 import type { ThemeConfig } from 'my-theme'
 
-export default defineConfigWithTheme<ThemeConfig>({
+export default defineConfig<ThemeConfig>({
   themeConfig: {
     // Type-checked theme config
   }
@@ -262,6 +277,7 @@ export default defineConfigWithTheme<ThemeConfig>({
 - `enhanceApp` runs on both server and client
 - Check `import.meta.env.SSR` for client-only code
 - Use `extends` to build on existing themes
+- v2: theme `setup` hook runs inside root `setup()`; router `onBeforeRouteChange`/`onAfterRouteChange` for navigation hooks; use `defineConfig<ThemeConfig>` (not `defineConfigWithTheme`)
 
 <!--
 Source references:

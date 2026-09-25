@@ -20,9 +20,9 @@ export default defineNuxtConfig({
 })
 ```
 
-### Nuxt 4 Path Aliases
+### Path Aliases
 
-In Nuxt 4 the default `srcDir` is `app/`, so the path aliases changed:
+The default `srcDir` is `app/`, so path aliases resolve as:
 
 | Alias | Resolves to |
 |-------|-------------|
@@ -42,17 +42,18 @@ export default defineNuxtConfig({
 })
 ```
 
+### `nuxt.config` Loading (Nuxt 5: no more `jiti`)
+
+Nuxt 5 no longer bundles `jiti`. `nuxt.config.ts`, files in `modules/`, and layer configs are loaded by the Node runtime directly (requires Node `22.19`/`24.11`+, which strip types natively). Two consequences:
+
+- **Relative imports in these files need an explicit extension** — write `./build/plugin.ts`, not `./build/plugin` (TS reports `TS2835`). Bare package imports are unaffected.
+- **Use erasable TypeScript only** in config/module files — no `enum`, `namespace`, constructor parameter properties, or decorators (TS reports `TS1294`).
+
+App and `shared/` code go through Vite and are unaffected. Published layers/modules must ship compiled JS (a shipped config as `nuxt.config.mjs`). Install `jiti` (`-D`) to restore the old fallback behavior; a `nuxt.schema` file always needs it.
+
 ### Compatibility Version
 
-Nuxt 4 is the default behavior. To preview upcoming Nuxt 5 defaults (Vite Environment API, normalized page names, etc.):
-
-```ts
-export default defineNuxtConfig({
-  future: {
-    compatibilityVersion: 5,
-  },
-})
-```
+Nuxt 5 behavior is now the default. `future.compatibilityVersion` is mostly historical — Nuxt 4 code paths that were opt-in are now unconditional. Individual behaviors are restored via specific `experimental`/config options (see each section below and the [upgrade notes](#nuxt-5-default-changes)).
 
 ### Environment Overrides
 
@@ -205,26 +206,50 @@ export default defineNuxtConfig({
 })
 ```
 
-## Experimental Features & Defaults
+## Nuxt 5 Default Changes
 
-Notable Nuxt 4 flags under `experimental` (see source for the full list):
+Many former experimental flags are now on by default. Each can be reverted via the named option:
+
+| Behavior | Now default | Restore Nuxt 4 with |
+|----------|-------------|---------------------|
+| Case-sensitive page routing | `router.options.sensitive: true` | `router.options.sensitive: false` |
+| Typed pages (`useRoute`/`navigateTo`/`<NuxtLink>` type-checked) | on | `experimental.typedPages: false` |
+| Page component name = route name | on | `experimental.normalizePageNames: false` |
+| All serializable `definePageMeta` written to route record | on | `experimental.extractSerializablePageMeta: false` |
+| Payload inlined in HTML, `_payload.json` only for SPA nav | `experimental.payloadExtraction: 'client'` | `payloadExtraction: true` |
+| `clearNuxtState` resets to `useState` init value | on | `experimental.defaults.useState.resetOnClear: false` |
+| `await navigateTo()` early-returns from `setup()` | on | `experimental.navigateToEarlyReturn: false` |
+| `callHook` may return `void` (not always a Promise) | on | `experimental.asyncCallHook: true` |
+| Client-only SSR placeholder is a comment node, not `<div>` | on | `experimental.clientNodePlaceholder: false` |
+| Reuse builder's file watcher | `experimental.watcher: 'builder'` | `watcher: 'chokidar'` |
+| Server auto-imports (Nitro helpers) | off | `experimental.nitroAutoImports: true` |
+| `error.data` parsed (never stringified) | forced on | — (`parseErrorData` no longer configurable) |
+| Vue Options API compiled out of client bundle | on | `vue: { optionsApi: true }` |
+| `noUncheckedSideEffectImports` in generated tsconfig | on | `typescript.tsConfig.compilerOptions.noUncheckedSideEffectImports: false` |
+
+**Removed options** (behavior now unconditional): `experimental.viteEnvironmentApi`, `experimental.routeTypedFetch`, `experimental.renderJsonPayloads`, `experimental.externalVue`. Delete them from config.
+
+`unhead.legacy` is ignored (setting it warns); Capo title sorting is always on.
+
+## Other Experimental Flags
+
+Notable opt-in flags under `experimental` (see source for the full list):
 
 ```ts
 export default defineNuxtConfig({
   experimental: {
     // Stream the HTML shell first, then render body progressively (better TTFB)
     ssrStreaming: true,
-    // Run useFetch when its key changes even if immediate:false and not yet triggered
-    alwaysRunFetchOnKeyChange: true,
-    // Split useAsyncData handlers into separate chunks (static builds)
-    extractAsyncDataHandlers: true,
-    // pending is true before fetching starts
-    pendingWhenIdle: true,
+    // Reject fetches to paths no server route answers (true | 'isomorphic')
+    strictRouteTypes: true,
+    // Respond 404 for unmatched paths without loading the Vue app/plugins/middleware
+    early404: true,
+    // Prerender error.vue into 404.html at build time
+    prerenderErrorPages: true,
     // Default options for core composables/components
     defaults: {
       nuxtLink: { prefetch: true, prefetchOn: { visibility: true } },
       useAsyncData: { deep: true },
-      useState: { resetOnClear: true },
     },
   },
 })
@@ -232,8 +257,9 @@ export default defineNuxtConfig({
 
 <!-- 
 Source references:
-- https://nuxt.com/docs/4.x/getting-started/configuration
-- https://nuxt.com/docs/4.x/guide/going-further/runtime-config
-- https://nuxt.com/docs/4.x/api/nuxt-config
-- https://nuxt.com/docs/4.x/guide/going-further/experimental-features
+- https://nuxt.com/docs/getting-started/configuration
+- https://nuxt.com/docs/getting-started/upgrade
+- https://nuxt.com/docs/guide/going-further/runtime-config
+- https://nuxt.com/docs/api/nuxt-config
+- https://nuxt.com/docs/guide/going-further/experimental-features
 -->

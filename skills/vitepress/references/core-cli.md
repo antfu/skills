@@ -50,6 +50,7 @@ vitepress build docs
 | Option | Description |
 |--------|-------------|
 | `--base <path>` | Override base URL |
+| `--assetsBase <url>` | URL prefix generated assets are served from, e.g. a CDN (v2) |
 | `--target <target>` | Transpile target (default: `modules`) |
 | `--outDir <dir>` | Output directory (relative to cwd) |
 | `--assetsInlineLimit <n>` | Asset inline threshold in bytes |
@@ -73,6 +74,7 @@ vitepress preview docs
 |--------|-------------|
 | `--port <port>` | Specify port number |
 | `--base <path>` | Override base URL |
+| `--assetsBase <url>` | URL prefix generated assets are served from (v2) |
 
 ```bash
 vitepress preview docs --port 4173

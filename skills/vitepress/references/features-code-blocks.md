@@ -205,6 +205,11 @@ With language and line numbers:
 <<< @/snippets/snippet.cs{1,2,4-6 c#:line-numbers}
 ```
 
+Tokens after the language pass through as attributes — e.g. `{ts twoslash}`
+enables twoslash when `@shikijs/vitepress-twoslash` is configured. Multiple
+regions with the same name are concatenated (across comment styles). A missing
+file/region throws a build error unless `markdown.snippet.silent: true`.
+
 In code groups:
 
 ```md

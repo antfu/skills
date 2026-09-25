@@ -85,6 +85,40 @@ presetWebFonts({
 })
 ```
 
+### Emit Fonts to Build Output
+
+In CI or a first build, fonts downloaded to `public` may not reach `dist` before the build finishes. Use the `onDownload` callback to collect fonts and emit them as Vite assets:
+
+```ts
+// vite.config.ts
+import { createLocalFontProcessor } from '@unocss/preset-web-fonts/local'
+
+const emittedFonts = new Map()
+
+export const fontProcessor = createLocalFontProcessor({
+  onDownload(filename, buf) {
+    emittedFonts.set(filename, buf)
+  },
+})
+
+export default defineConfig({
+  plugins: [
+    UnoCSS(),
+    {
+      name: 'unocss:font-emit',
+      apply: 'build',
+      generateBundle() {
+        for (const [filename, source] of emittedFonts)
+          this.emitFile({ type: 'asset', fileName: `assets/fonts/${filename}`, source })
+        emittedFonts.clear()
+      },
+    },
+  ],
+})
+```
+
+Then pass `fontProcessor` to `presetWebFonts({ processors: [fontProcessor] })` in `uno.config.ts`.
+
 <!-- 
 Source references:
 - https://unocss.dev/presets/web-fonts

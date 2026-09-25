@@ -14,6 +14,8 @@ pnpm settings are split into **two** categories. Knowing where each goes is the 
 
 > **Important changes:** pnpm no longer reads settings from the `pnpm` field of `package.json`, and `.npmrc` is now used **only** for authentication/registry credentials. Everything else belongs in `pnpm-workspace.yaml`. Keys in YAML are **camelCase** (e.g. `nodeLinker`), not the kebab-case used by old `.npmrc` files.
 
+> The upstream settings reference is now split into pages by area — `settings/build`, `settings/cli`, `settings/dependency-resolution`, `settings/network`, `settings/node-modules`, `settings/store`, `settings/peer-dependencies`, `settings/versioning`, `settings/other` — but they are all the same camelCase keys in `pnpm-workspace.yaml`.
+
 ## pnpm-workspace.yaml (primary config)
 
 Place at the workspace/project root. Even a single-package project uses this file for pnpm settings.
@@ -102,6 +104,21 @@ Keep auth tokens out of the repo (gitignore the project `.npmrc`). Auth files, h
 //registry.npmjs.org/:_authToken=${NPM_TOKEN}
 @myorg:registry=https://npm.myorg.com/
 //npm.myorg.com/:_authToken=${MYORG_TOKEN}
+```
+
+### Structured `_auth` (v11.10+, for CI)
+
+An alternative to many `//host/:_authToken=…` lines, keyed by registry URL. Honored **only** from the global `config.yaml` and the `pnpm_config__auth` (or `PNPM_CONFIG__AUTH`) env var — **ignored** in a project `.npmrc`/`pnpm-workspace.yaml`, so a checked-out repo can never supply auth. `pnpm login` writes this shape since v12.1.
+
+```yaml title="config.yaml (global only)"
+_auth:
+  https://registry.npmjs.org:
+    "@":         { authToken: npm-token }   # @ = registry-wide/default
+    "@org":      { authToken: org-token }   # scope-bound on the same host
+```
+
+```sh
+export pnpm_config__auth='{"https://registry.npmjs.org":{"@":{"authToken":"npm-token"}}}'
 ```
 
 Configure registries themselves (non-secret) in `pnpm-workspace.yaml`:

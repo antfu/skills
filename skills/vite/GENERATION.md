@@ -1,5 +1,5 @@
 # Generation Info
 
 - **Source:** `sources/vite`
-- **Git SHA:** `c47015eba4f0de255218c35769628d87152216ca`
-- **Generated:** 2026-01-31
+- **Git SHA:** `69283019441d93763f085806b374fc53eaea323b`
+- **Generated:** 2026-09-25

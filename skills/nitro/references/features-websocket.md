@@ -17,7 +17,7 @@ export default defineConfig({
 
 ## Handlers
 
-Export a `defineWebSocketHandler` from a route file — same file-based routing as HTTP handlers (`routes/_ws.ts` → `/_ws`).
+Export a `defineWebSocketHandler` (from `nitro`) in a route file — same file-based routing as HTTP handlers (`routes/_ws.ts` → `/_ws`), so `serverDir` must be set.
 
 ```ts [routes/_ws.ts]
 import { defineWebSocketHandler } from "nitro";
@@ -50,7 +50,7 @@ export default defineWebSocketHandler({
   upgrade(request) {
     const token = new URL(request.url).searchParams.get("token");
     if (!isValid(token)) throw new Response("Unauthorized", { status: 401 });
-    return { context: { userId: getUserId(token) } }; // also: headers, namespace
+    return { context: { userId: getUserId(token) } }; // also: headers, protocol, namespace, handled
   },
   open(peer) {
     console.log("user", peer.context.userId);
@@ -60,7 +60,7 @@ export default defineWebSocketHandler({
 
 ## Peer & message
 
-`peer` (in all hooks except `upgrade`) exposes `id`, `namespace`, `context`, `request`, `peers`, `topics`, plus methods:
+`peer` (in all hooks except `upgrade`) exposes `id`, `namespace`, `context`, `request`, `peers`, `topics`, `remoteAddress`, `websocket`, plus methods:
 
 ```ts
 peer.send("text");                 // or an object -> JSON

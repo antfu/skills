@@ -11,7 +11,7 @@ Matching order: `request` hook → route rules → middleware → specific route
 
 ## Server entry
 
-Auto-detected from `server.ts` in the project root. It runs for every request before the renderer. Return a `Response` to terminate, return nothing to continue.
+Auto-detected from `server.ts` (or `.js/.mjs/.mts/.tsx/.jsx`) in `serverDir` (if set) or the project root. It is registered as a catch-all (`/**`) that runs only for requests **no route matched**, right before the renderer — it is a fallback, not global middleware (use [middleware](core-routing.md#middleware) for cross-cutting concerns). Its top-level code runs once at startup (before plugins). Return a `Response` to terminate, return nothing to continue.
 
 ```ts [server.ts]
 export default {
@@ -36,13 +36,29 @@ export default defineHandler((event) => {
 });
 ```
 
-Configure explicitly with `serverEntry`:
+Configure explicitly with `serverEntry` (a string, or `{ handler, format }`, or `false` to disable):
 
 ```ts [nitro.config.ts]
 export default defineConfig({
-  serverEntry: { handler: "./server.ts", format: "web" }, // or false to disable
+  serverEntry: { handler: "./server.ts", format: "web" }, // "web" (default) or "node"
 });
 ```
+
+### Typed server options
+
+When the default export is a plain object, use `defineServerEntry` for typed [srvx](https://srvx.h3.dev/) server options (`port`, `hostname`, `tls`, `maxRequestBodySize`, ...), applied by the Node/Bun/Deno presets:
+
+```ts [server.ts]
+import { defineServerEntry } from "nitro";
+
+export default defineServerEntry({
+  fetch: (req) => new Response("Hello"),
+  port: 8080,
+  maxRequestBodySize: 1024 * 1024,
+});
+```
+
+`NITRO_PORT`/`PORT`, `NITRO_HOST`/`HOST`, `NITRO_SSL_CERT`/`NITRO_SSL_KEY` override the matching options. Options are read only from plain-object exports (not framework instances or `server.node.ts`).
 
 ### Framework integration
 

@@ -48,6 +48,8 @@ When `reporters` is unset, Vitest auto-selects:
 
 ## Output Files
 
+> **v5:** the `json` and `junit` reporters now **write to a file by default** (`.vitest/json/output.json`, `.vitest/junit/output.xml`) instead of stdout. If you piped output (`vitest --reporter=json | jq`), read the artifact instead or opt back in with `reporters: [['json', { stdout: true }]]`. An explicit `outputFile` is still respected.
+
 ```bash
 vitest --reporter=json --outputFile=./test-output.json
 ```

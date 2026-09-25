@@ -75,7 +75,7 @@ This caches the results of postinstall scripts, speeding up subsequent installs.
 For many checkouts of the same repo (e.g. git worktrees / multiple agents), enable the global virtual store so each project's `node_modules` is just symlinks into one shared store — near-zero per-checkout cost. Auto-disabled in CI.
 
 ```yaml title="pnpm-workspace.yaml"
-enableGlobalVirtualStore: true
+virtualStoreType: global
 ```
 
 ### Shared Store
@@ -236,7 +236,7 @@ networkConcurrency: 16
 workspaceConcurrency: 4
 
 # Many checkouts of the same repo
-enableGlobalVirtualStore: true
+virtualStoreType: global
 ```
 
 ## Quick Reference
@@ -249,7 +249,7 @@ enableGlobalVirtualStore: true
 | Parallel workspace | `pnpm -r --parallel run build` |
 | Build changed only | `pnpm --filter "...[origin/main]" build` |
 | Clean store | `pnpm store prune` |
-| Many worktrees/agents | `enableGlobalVirtualStore: true` |
+| Many worktrees/agents | `virtualStoreType: global` |
 
 <!--
 Source references:

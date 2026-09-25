@@ -1,5 +1,5 @@
 # Generation Info
 
 - **Source:** `sources/vitepress`
-- **Git SHA:** `d4796a0373eb486766cf48e63fdf461681424d43`
-- **Generated:** 2026-01-28
+- **Git SHA:** `6f75aefff2a78099432e51a36c0e6e4aaacc0343`
+- **Generated:** 2026-09-25

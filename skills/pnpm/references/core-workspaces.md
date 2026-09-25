@@ -145,6 +145,22 @@ resolvePeersFromWorkspaceRoot: true
 # Scripts required in every project (else `pnpm -r run <name>` fails)
 requiredScripts:
   - build
+# Downgrade dependency-cycle warnings; also turns ERR_PNPM_TASK_CYCLE into a warning
+ignoreWorkspaceCycles: false
+```
+
+> `linkWorkspacePackages: true` links a workspace project only where a project declares it directly; a transitive plain-range dep still comes from the registry. Use `deep` to link workspace projects into subdependencies too.
+
+### Cross-project task graphs
+
+`pnpm -r run <script>` schedules a dependency-aware task graph. Declare relationships under `tasks` (with `dependsOn`, `concurrencyGroups`, `priority`) and run cached CI-style `pnpm pipeline`. See `features-task-orchestration`.
+
+```yaml title="pnpm-workspace.yaml"
+tasks:
+  build:
+    dependsOn: ['^build']   # build each workspace dependency first
+  test:
+    dependsOn: ['build']
 ```
 
 ### Per-package configuration (packageConfigs)
@@ -218,5 +234,5 @@ my-monorepo/
 Source references:
 - https://pnpm.io/workspaces
 - https://pnpm.io/filtering
-- https://pnpm.io/npmrc#workspace-settings
+- https://pnpm.io/workspace-task-orchestration
 -->
