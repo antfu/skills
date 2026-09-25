@@ -1,10 +1,10 @@
 import { execSync } from 'node:child_process'
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import * as p from '@clack/prompts'
-import { manual, submodules, vendors } from '../meta.ts'
+import { manual, submodules } from '../meta.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
@@ -20,10 +20,6 @@ function execSafe(cmd: string, cwd = root): string | null {
   catch {
     return null
   }
-}
-
-function getGitSha(dir: string): string | null {
-  return execSafe('git rev-parse HEAD', dir)
 }
 
 function submoduleExists(path: string): boolean {
@@ -60,31 +56,19 @@ function removeSubmodule(submodulePath: string): void {
 interface Project {
   name: string
   url: string
-  type: 'source' | 'vendor'
   path: string
 }
 
-interface VendorConfig {
-  source: string
-  skillsPath?: string // Optional custom path to skills directory (default: 'skills')
-  skills: Record<string, string> // sourceSkillName -> outputSkillName
+function getProjects(): Project[] {
+  return Object.entries(submodules).map(([name, url]) => ({
+    name,
+    url,
+    path: `sources/${name}`,
+  }))
 }
 
 async function initSubmodules(skipPrompt = false) {
-  const allProjects: Project[] = [
-    ...Object.entries(submodules).map(([name, url]) => ({
-      name,
-      url,
-      type: 'source' as const,
-      path: `sources/${name}`,
-    })),
-    ...Object.entries(vendors).map(([name, config]) => ({
-      name,
-      url: (config as VendorConfig).source,
-      type: 'vendor' as const,
-      path: `vendor/${name}`,
-    })),
-  ]
+  const allProjects = getProjects()
 
   const spinner = p.spinner()
 
@@ -139,7 +123,7 @@ async function initSubmodules(skipPrompt = false) {
         message: 'Select projects to initialize',
         options: newProjects.map(project => ({
           value: project,
-          label: `${project.name} (${project.type})`,
+          label: project.name,
           hint: project.url,
         })),
         initialValues: newProjects,
@@ -178,7 +162,6 @@ async function initSubmodules(skipPrompt = false) {
 async function syncSubmodules() {
   const spinner = p.spinner()
 
-  // Update all submodules
   spinner.start('Updating submodules...')
   try {
     exec('git submodule update --remote --merge')
@@ -189,88 +172,7 @@ async function syncSubmodules() {
     return
   }
 
-  // Sync Type 2 skills
-  for (const [vendorName, config] of Object.entries(vendors)) {
-    const vendorConfig = config as VendorConfig
-    const vendorPath = join(root, 'vendor', vendorName)
-    const skillsBasePath = vendorConfig.skillsPath || 'skills'
-    const vendorSkillsPath = join(vendorPath, skillsBasePath)
-
-    if (!existsSync(vendorPath)) {
-      p.log.warn(`Vendor submodule not found: ${vendorName}. Run init first.`)
-      continue
-    }
-
-    if (!existsSync(vendorSkillsPath)) {
-      p.log.warn(`No skills directory in vendor/${vendorName}/${skillsBasePath}/`)
-      continue
-    }
-
-    // Sync each specified skill
-    for (const [sourceSkillName, outputSkillName] of Object.entries(vendorConfig.skills)) {
-      const sourceSkillPath = join(vendorSkillsPath, sourceSkillName)
-      const outputPath = join(root, 'skills', outputSkillName)
-
-      if (!existsSync(sourceSkillPath)) {
-        p.log.warn(`Skill not found: vendor/${vendorName}/skills/${sourceSkillName}`)
-        continue
-      }
-
-      spinner.start(`Syncing skill: ${sourceSkillName} → ${outputSkillName}`)
-
-      // Remove existing output directory to ensure clean sync
-      if (existsSync(outputPath)) {
-        rmSync(outputPath, { recursive: true })
-      }
-      mkdirSync(outputPath, { recursive: true })
-
-      // Copy all files from source skill to output
-      const files = readdirSync(sourceSkillPath, { recursive: true, withFileTypes: true })
-      for (const file of files) {
-        if (file.isFile()) {
-          const fullPath = join(file.parentPath, file.name)
-          const relativePath = fullPath.replace(sourceSkillPath, '')
-          const destPath = join(outputPath, relativePath)
-
-          // Ensure destination directory exists
-          const destDir = dirname(destPath)
-          if (!existsSync(destDir)) {
-            mkdirSync(destDir, { recursive: true })
-          }
-
-          cpSync(fullPath, destPath)
-        }
-      }
-
-      // Copy LICENSE file from vendor repo root if it exists
-      const licenseNames = ['LICENSE', 'LICENSE.md', 'LICENSE.txt', 'license', 'license.md', 'license.txt']
-      for (const licenseName of licenseNames) {
-        const licensePath = join(vendorPath, licenseName)
-        if (existsSync(licensePath)) {
-          cpSync(licensePath, join(outputPath, 'LICENSE.md'))
-          break
-        }
-      }
-
-      // Update SYNC.md (instead of GENERATION.md for vendored skills)
-      const sha = getGitSha(vendorPath)
-      const syncPath = join(outputPath, 'SYNC.md')
-      const date = new Date().toISOString().split('T')[0]
-
-      const syncContent = `# Sync Info
-
-- **Source:** \`vendor/${vendorName}/${skillsBasePath}/${sourceSkillName}\`
-- **Git SHA:** \`${sha}\`
-- **Synced:** ${date}
-`
-
-      writeFileSync(syncPath, syncContent)
-
-      spinner.stop(`Synced: ${sourceSkillName} → ${outputSkillName}`)
-    }
-  }
-
-  p.log.success('All skills synced')
+  p.log.success('All submodules synced')
 }
 
 async function checkUpdates() {
@@ -286,9 +188,8 @@ async function checkUpdates() {
     return
   }
 
-  const updates: { name: string, type: string, behind: number }[] = []
+  const updates: { name: string, behind: number }[] = []
 
-  // Check sources
   for (const name of Object.keys(submodules)) {
     const path = join(root, 'sources', name)
     if (!existsSync(path))
@@ -297,22 +198,7 @@ async function checkUpdates() {
     const behind = execSafe('git rev-list HEAD..@{u} --count', path)
     const count = behind ? Number.parseInt(behind) : 0
     if (count > 0) {
-      updates.push({ name, type: 'source', behind: count })
-    }
-  }
-
-  // Check vendors
-  for (const [name, config] of Object.entries(vendors)) {
-    const vendorConfig = config as VendorConfig
-    const path = join(root, 'vendor', name)
-    if (!existsSync(path))
-      continue
-
-    const behind = execSafe('git rev-list HEAD..@{u} --count', path)
-    const count = behind ? Number.parseInt(behind) : 0
-    if (count > 0) {
-      const skillNames = Object.values(vendorConfig.skills).join(', ')
-      updates.push({ name: `${name} (${skillNames})`, type: 'vendor', behind: count })
+      updates.push({ name, behind: count })
     }
   }
 
@@ -322,7 +208,7 @@ async function checkUpdates() {
   else {
     p.log.info('Updates available:')
     for (const update of updates) {
-      p.log.message(`  ${update.name} (${update.type}): ${update.behind} commits behind`)
+      p.log.message(`  ${update.name}: ${update.behind} commits behind`)
     }
   }
 }
@@ -333,14 +219,6 @@ function getExpectedSkillNames(): Set<string> {
   // Skills from submodules (generated skills use same name as submodule key)
   for (const name of Object.keys(submodules)) {
     expected.add(name)
-  }
-
-  // Skills from vendors (use the output skill name)
-  for (const config of Object.values(vendors)) {
-    const vendorConfig = config as VendorConfig
-    for (const outputName of Object.values(vendorConfig.skills)) {
-      expected.add(outputName)
-    }
   }
 
   // Manual skills
@@ -366,20 +244,7 @@ async function cleanup(skipPrompt = false) {
   let hasChanges = false
 
   // 1. Find and remove extra submodules
-  const allProjects: Project[] = [
-    ...Object.entries(submodules).map(([name, url]) => ({
-      name,
-      url,
-      type: 'source' as const,
-      path: `sources/${name}`,
-    })),
-    ...Object.entries(vendors).map(([name, config]) => ({
-      name,
-      url: (config as VendorConfig).source,
-      type: 'vendor' as const,
-      path: `vendor/${name}`,
-    })),
-  ]
+  const allProjects = getProjects()
 
   const existingSubmodulePaths = getExistingSubmodulePaths()
   const expectedSubmodulePaths = new Set(allProjects.map(p => p.path))
@@ -510,7 +375,7 @@ async function main() {
   const action = await p.select({
     message: 'What would you like to do?',
     options: [
-      { value: 'sync', label: 'Sync submodules', hint: 'Pull latest and sync Type 2 skills' },
+      { value: 'sync', label: 'Sync submodules', hint: 'Pull latest source docs' },
       { value: 'init', label: 'Init submodules', hint: 'Add new submodules' },
       { value: 'check', label: 'Check updates', hint: 'See available updates' },
       { value: 'cleanup', label: 'Cleanup', hint: 'Remove unused submodules and skills' },

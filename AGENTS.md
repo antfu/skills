@@ -21,16 +21,7 @@ For OSS projects **without existing skills**. We clone the repo as a submodule a
 - **Workflow:** Read docs → Understand → Generate skills
 - **Source:** `sources/{project}/docs/`
 
-### Type 2: Synced Skills (`vendor/`)
-
-For projects that **already maintain their own skills**. We clone their repo as a submodule and sync specified skills to ours.
-
-- **Projects:** Slidev, VueUse
-- **Workflow:** Pull updates → Copy specified skills (with optional renaming)
-- **Source:** `vendor/{project}/skills/{skill-name}/`
-- **Config:** Each vendor specifies which skills to sync and their output names in `meta.ts`
-
-### Type 3: Hand-written Skills
+### Type 2: Hand-written Skills
 
 For skills that are written by Anthony Fu with his preferences, experience, tastes and best practices.
 
@@ -48,25 +39,19 @@ You don't need to do anything about them unless being asked.
 │   └── {project}/
 │       └── docs/               # Read documentation from here
 │
-├── vendor/                     # Type 2: Projects with existing skills (sync only)
-│   └── {project}/
-│       └── skills/
-│           └── {skill-name}/   # Individual skills to sync
-│
-└── skills/                     # Output directory (generated or synced)
+└── skills/                     # Output directory
     └── {output-name}/
         ├── SKILL.md           # Index of all skills
         ├── GENERATION.md       # Tracking metadata (for generated skills)
-        ├── SYNC.md             # Tracking metadata (for synced skills)
         └── references/
             └── *.md            # Individual skill files
 ```
 
-**Important:** For Type 1 (generated), the `skills/{project}/` name must match `sources/{project}/`. For Type 2 (synced), the output name is configured in `meta.ts` and may differ from the source skill name.
+**Important:** For Type 1 (generated), the `skills/{project}/` name must match `sources/{project}/`.
 
 ## Workflows
 
-### For Generated Skills (Type 1)
+### For Generated Skills
 
 #### Adding a New Project
 
@@ -110,25 +95,6 @@ You don't need to do anything about them unless being asked.
 2. **Update** affected skill files based on changes
 3. **Update** `SKILL.md` with the new version of the tool/project and skills table.
 4. **Update** `GENERATION.md` with new SHA
-
-### For Synced Skills (Type 2)
-
-#### Initial Sync
-
-1. **Copy** specified skills from `vendor/{project}/skills/{skill-name}/` to `skills/{output-name}/`
-2. **Create** `SYNC.md` with the vendor git SHA
-
-#### Updating Synced Skills
-
-1. **Check** git diff since the SHA recorded in `SYNC.md`:
-   ```bash
-   cd vendor/{project}
-   git diff {old-sha}..HEAD -- skills/{skill-name}/
-   ```
-2. **Copy** changed files from `vendor/{project}/skills/{skill-name}/` to `skills/{output-name}/`
-3. **Update** `SYNC.md` with new SHA
-
-**Note:** Do NOT modify synced skills manually. Changes should be contributed upstream to the vendor project.
 
 ## File Formats
 
@@ -182,7 +148,7 @@ metadata:
 
 ### `GENERATION.md`
 
-Tracking metadata for generated skills (Type 1):
+Tracking metadata for generated skills:
 
 ```markdown
 # Generation Info
@@ -190,18 +156,6 @@ Tracking metadata for generated skills (Type 1):
 - **Source:** `sources/{project}`
 - **Git SHA:** `abc123def456...`
 - **Generated:** 2024-01-15
-```
-
-### `SYNC.md`
-
-Tracking metadata for synced skills (Type 2):
-
-```markdown
-# Sync Info
-
-- **Source:** `vendor/{project}/skills/{skill-name}`
-- **Git SHA:** `abc123def456...`
-- **Synced:** 2024-01-15
 ```
 
 ### `references/*.md`
@@ -239,7 +193,7 @@ Source references:
 
 ## Writing Guidelines
 
-When generating skills (Type 1 only):
+When generating skills:
 
 1. **Rewrite for agents** - Don't copy docs verbatim; synthesize for LLM consumption
 2. **Be practical** - Focus on usage patterns and code examples

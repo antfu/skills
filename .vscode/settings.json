@@ -1,7 +1,6 @@
 {
   "search.exclude": {
-    "sources/**": true,
-    "vendor/**": true
+    "sources/**": true
   },
   "prettier.enable": false,
   "editor.formatOnSave": false,

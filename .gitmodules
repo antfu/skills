@@ -10,12 +10,6 @@
 [submodule "sources/unocss"]
 	path = sources/unocss
 	url = https://github.com/unocss/unocss
-[submodule "vendor/slidev"]
-	path = vendor/slidev
-	url = https://github.com/slidevjs/slidev
-[submodule "vendor/vueuse"]
-	path = vendor/vueuse
-	url = https://github.com/vueuse/skills
 [submodule "sources/vitest"]
 	path = sources/vitest
 	url = https://github.com/vitest-dev/vitest
@@ -25,21 +19,9 @@
 [submodule "sources/vitepress"]
 	path = sources/vitepress
 	url = https://github.com/vuejs/vitepress
-[submodule "vendor/turborepo"]
-	path = vendor/turborepo
-	url = https://github.com/vercel/turborepo
-[submodule "vendor/web-design-guidelines"]
-	path = vendor/web-design-guidelines
-	url = https://github.com/vercel-labs/agent-skills
 [submodule "sources/pinia"]
 	path = sources/pinia
 	url = https://github.com/vuejs/pinia
-[submodule "vendor/tsdown"]
-	path = vendor/tsdown
-	url = https://github.com/rolldown/tsdown
-[submodule "vendor/vuejs-ai"]
-	path = vendor/vuejs-ai
-	url = https://github.com/vuejs-ai/skills
 [submodule "sources/nitro"]
 	path = sources/nitro
 	url = https://github.com/nitrojs/nitro
