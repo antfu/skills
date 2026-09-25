@@ -29,7 +29,8 @@ export const hooks = {
 | `updateConfig(config)` | before install | mutate pnpm's settings (great with config dependencies) |
 | `beforePacking(pkg)` | before `pnpm pack`/`publish` tarball | customize the **published** manifest only |
 | `preResolution(opts)` | after reading lockfiles, before resolution | inspect/modify lockfile objects |
-| `importPackage(dir, opts)` | when writing to node_modules | change how packages are linked |
+| `importPackage(dir, opts)` | when writing to node_modules | **deprecated (v11.23.0)** — opts out of the parallel importer; will be removed |
+| `filterLog(log)` | per log entry | **deprecated/ignored (v12.0.0)** — use `loglevel` instead |
 
 ## readPackage
 
@@ -85,6 +86,8 @@ export const hooks = {
   }
 }
 ```
+
+> Since v12.4.1, `config` is the **resolved** configuration (every setting pnpm will act on, from `.npmrc`, CLI, and defaults; unset keys are absent, not `null`). It also carries `registriesByScope` (scope → registry URL; rewrite to redirect fetches) and `configByUri` (registry URI → credentials). Since v12.3.0 the pnpmfile is loaded by many more commands (`run`, `exec`, `rebuild`, script shortcuts, `link`, `outdated`, `import`, `pack`, `publish`, `stage publish`), so `updateConfig` settings like `extraEnv`/`extraBinPaths` reach spawned processes and hook-provided catalogs resolve at pack time.
 
 ## beforePacking
 
@@ -146,6 +149,18 @@ module.exports = { resolvers: [resolver], fetchers: [fetcher] }
 ```
 
 > `hooks.fetchers` was removed in v11 — use the top-level `fetchers` export instead.
+
+### Delegating to built-in fetchers
+
+Instead of fetching itself, a custom fetcher can return a `{ delegate }` envelope naming a complete, fetchable resolution for pnpm to fetch with its built-in path (single-step; a custom-typed delegate is rejected):
+
+```js
+fetch: (cafs, resolution) => ({
+  delegate: { tarball: resolution.customUrl, integrity: resolution.integrity },
+})
+```
+
+> Prefer the envelope over calling `fetchers.*` directly: it is the only form that works in both pnpm and pacquet (the Rust port), where `cafs`/`fetchers` arrive as `null` over IPC.
 
 ## Related settings
 

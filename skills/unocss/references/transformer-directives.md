@@ -104,7 +104,15 @@ Access theme values in CSS:
 }
 ```
 
-Dot notation paths into your theme config.
+Dot notation paths into your theme config. Also works in at-rule conditions:
+
+```css
+@media (min-width: theme('breakpoints.md')) {
+  .btn-blue {
+    background-color: theme('colors.blue.500');
+  }
+}
+```
 
 ## icon()
 

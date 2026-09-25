@@ -286,8 +286,9 @@ export default defineNuxtModule({
 
 <!-- 
 Source references:
-- https://nuxt.com/docs/4.x/guide/modules
-- https://nuxt.com/docs/4.x/guide/modules/module-anatomy
-- https://nuxt.com/docs/4.x/guide/modules/module-dependencies
-- https://nuxt.com/docs/4.x/api/kit
+- https://nuxt.com/docs/guide/modules
+- https://nuxt.com/docs/guide/modules/module-anatomy
+- https://nuxt.com/docs/guide/modules/module-dependencies
+- https://nuxt.com/docs/guide/modules/server-compatibility
+- https://nuxt.com/docs/api/kit
 -->

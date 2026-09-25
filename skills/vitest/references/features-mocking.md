@@ -95,6 +95,8 @@ it('mocks console only here', () => {
 
 ## Module Mocking
 
+`vi.mock`, `vi.unmock`, and `vi.hoisted` are hoisted to the top of the file. In v5 calling them inside a function, block, or `describe`/`test` callback **throws** (it only warned before) — keep them at the module top level. Use `vi.doMock`/`vi.doUnmock` for non-hoisted, in-scope mocking.
+
 ```ts
 // vi.mock is hoisted to top of file
 vi.mock('./api', () => ({
@@ -222,6 +224,16 @@ expect(new Date().getFullYear()).toBe(2024)
 vi.useRealTimers() // Restore
 ```
 
+v5 fake timers (and `vi.setSystemTime` used without them) also mock `Temporal` when it's on the global object, not just `Date`:
+
+```ts
+vi.setSystemTime(0)
+Temporal.Now.instant().epochMilliseconds // 0
+
+// keep Temporal native:
+vi.useFakeTimers({ toNotFake: ['Temporal'] })
+```
+
 ## Mock Globals
 
 ```ts
@@ -265,7 +277,7 @@ vi.restoreAllMocks()
 // vitest.config.ts
 defineConfig({
   test: {
-    clearMocks: true,    // Clear before each test
+    clearMocks: true,    // Clear call history before each test — v5 DEFAULT
     mockReset: true,     // Reset before each test
     restoreMocks: true,  // Restore after each test
     unstubEnvs: true,    // Restore env vars
@@ -273,6 +285,8 @@ defineConfig({
   },
 })
 ```
+
+> **v5:** `clearMocks` defaults to `true`, so mock call history no longer leaks between tests. Mocks set up outside the test body (setup files, module top level, `beforeAll`) are most affected — their recorded calls are cleared before the asserting test runs. Set `clearMocks: false` to restore the old behavior.
 
 ## Hoisted Variables for Mocks
 
@@ -290,6 +304,11 @@ test('hoisted mock', () => {
   expect(getData()).toBe('test')
 })
 ```
+
+## v5 Behavior Changes
+
+- **Class mocks keep prototype methods.** `vi.fn(Dog)`, `vi.spyOn(obj, 'Dog')`, and `.mockImplementation(class …)` now chain the mock's `prototype` to the implementation's, so instance methods work and `instanceof Dog` passes. `mockReset` reverts the chain.
+- **Automocked modules stay automocked in the browser** — their exports return `undefined` unless you pass `{ spy: true }` or a factory.
 
 ## v4 Behavior Changes
 

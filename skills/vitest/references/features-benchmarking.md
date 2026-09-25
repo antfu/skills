@@ -73,6 +73,14 @@ test('compare against baseline', async ({ bench }) => {
 - Consume the result inside the bench fn — JS engines eliminate side-effect-free code.
 - In Node mode every imported binding goes through Vite's module-runner getter; store hot references locally (`const _parse = parse`), benchmark the built package, or disable `experimental.viteModuleRunner` for the bench project.
 
+## Custom Provider (experimental)
+
+Replace the built-in Tinybench engine by pointing `benchmark.provider` at a module whose default export implements `BenchmarkProvider`:
+
+```ts
+defineConfig({ test: { benchmark: { provider: './benchmark-provider.ts' } } })
+```
+
 ## v5 Migration
 
 - `bench` top-level import → `({ bench })` from the test context

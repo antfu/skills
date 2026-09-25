@@ -14,6 +14,15 @@ Nuxt provides composables for SSR-friendly data fetching that prevent double-fet
 - `useAsyncData` - SSR-safe wrapper for any async function
 - `createUseFetch` / `createUseAsyncData` - factories to build typed custom composables with baked-in defaults
 
+### On `await`
+
+`await` does **not** change the server-rendered HTML — SSR always waits for the request and serializes the populated result. What it changes is client behavior:
+
+- **With `await`** (default): setup pauses until data is ready; client-side navigation is blocked until it resolves (user stays put, optionally with `<NuxtLoadingIndicator>`).
+- **Without `await`**: setup continues immediately, `data` starts at its default and fills in later; client navigation happens instantly and you handle `status`/`error` yourself.
+
+Prefer the explicit `lazy` option (or `useLazyFetch`/`useLazyAsyncData`) for non-blocking intent. Note: `await`-ing a `lazy` call does **not** block client navigation — drop `lazy` if you want the wait.
+
 ## useFetch
 
 Primary composable for fetching data in components:
@@ -167,6 +176,48 @@ export const useCachedData = createUseAsyncData({
 
 > Replaces the old "don't await your custom `useFetch` wrapper" caveat — use these factories instead of hand-rolled wrappers.
 
+## Typed Routes (Nuxt 5)
+
+`$fetch` and `useFetch` are typed from the routes your server builder reports (not nitro's `InternalApi`). The response is typed from the matching handler's return type, keyed by HTTP method:
+
+```ts
+// server/api/todos.get.ts
+export default defineEventHandler(() => [{ id: '1', title: 'Buy milk' }])
+```
+
+```ts
+const todos = await $fetch('/api/todos')
+//    ^? { id: string, title: string }[]
+```
+
+If a handler validates its request, the `body`/`query`/`headers` are enforced on the call, and a method the route doesn't handle is rejected:
+
+```ts
+await $fetch('/api/todos', { method: 'POST', body: { title: 42 } })
+//                                                  ^ not assignable to string
+```
+
+Key points:
+
+- The **`params` option is removed** from `$fetch`/`useFetch` (it was an alias for `query`) — move it to `query`.
+- A `baseURL` is resolved into the path before matching, so passing an already-prefixed path is an error.
+- A runtime path, absolute URL, or `Request` object resolves to `unknown`; provide an explicit type: `$fetch<{ id: string }>(\`/api/${x}\`)`.
+- A path Nuxt doesn't recognize is `unknown` by default; set `experimental.strictRouteTypes: true` (or `'isomorphic'`) to make it an error.
+- Declare routes Nuxt can't see (runtime-registered, external APIs) by augmenting `ServerRoutes`:
+
+```ts
+// shared/server-routes.d.ts
+import type { Endpoint } from 'nuxt/app'
+
+declare module '@nuxt/schema' {
+  interface ServerRoutes {
+    '/api/hello': {
+      [Endpoint]: { GET: { response: { message: string } } }
+    }
+  }
+}
+```
+
 ## $fetch
 
 For client-side events (form submissions, button clicks):
@@ -234,7 +285,7 @@ const refreshData = () => refresh()
 
 ## Caching
 
-Data is cached by key. Share data across components:
+`useFetch` generates its key from the URL **plus** the fetch options and the call's source location — so two `useFetch('/api/user')` calls in different components have **different** keys and each run their own request. To share data, pass the **same explicit `key`**:
 
 ```vue
 <script setup lang="ts">
@@ -293,10 +344,10 @@ const data = await $fetch('/api/user', { headers })
 
 <!-- 
 Source references:
-- https://nuxt.com/docs/4.x/getting-started/data-fetching
-- https://nuxt.com/docs/4.x/api/composables/use-fetch
-- https://nuxt.com/docs/4.x/api/composables/use-async-data
-- https://nuxt.com/docs/4.x/api/composables/create-use-fetch
-- https://nuxt.com/docs/4.x/api/composables/create-use-async-data
-- https://nuxt.com/docs/4.x/guide/recipes/custom-usefetch
+- https://nuxt.com/docs/getting-started/data-fetching
+- https://nuxt.com/docs/api/composables/use-fetch
+- https://nuxt.com/docs/api/composables/use-async-data
+- https://nuxt.com/docs/api/composables/create-use-fetch
+- https://nuxt.com/docs/api/composables/create-use-async-data
+- https://nuxt.com/docs/guide/recipes/custom-usefetch
 -->

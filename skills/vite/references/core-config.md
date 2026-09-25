@@ -68,6 +68,17 @@ export default defineConfig(({ mode }) => {
 
 ## Key Config Options
 
+### input (top-level, Vite 8)
+
+Declare entry points once at the top level. Acts as the default for `build.rolldownOptions.input`, `build.lib.entry`, `build.ssr` (when `true`), and `optimizeDeps.entries`. Useful when the app has no `index.html` entry.
+
+```ts
+export default defineConfig({
+  input: 'src/main.ts',
+  // or multi-page: { main: 'index.html', nested: 'nested/index.html' }
+})
+```
+
 ### resolve.alias
 
 ```ts
@@ -80,6 +91,8 @@ export default defineConfig({
   },
 })
 ```
+
+The array form's `customResolver` was removed in Vite 8 — use a custom plugin with a `resolveId` hook and `enforce: 'pre'` instead.
 
 ### define (Global Constants)
 
@@ -124,7 +137,7 @@ export default defineConfig({
 
 ### build.target
 
-Default: Baseline Widely Available browsers. Customize:
+Default `'baseline-widely-available'` → `['chrome111', 'edge111', 'firefox114', 'safari16.4', 'ios16.4']` (Vite 8, Baseline Widely Available as of 2026-01-01). Customize:
 
 ```ts
 export default defineConfig({
@@ -132,6 +145,24 @@ export default defineConfig({
     target: 'esnext', // or 'es2020', ['chrome90', 'firefox88']
   },
 })
+```
+
+To set the dev/transform target, use `oxc.target` (replaces `esbuild.target`); `build.target` takes precedence for builds.
+
+### tsconfig (Vite 8)
+
+Force a specific tsconfig instead of Vite's per-file discovery. Discouraged — prefer placing `tsconfig.json` near the files it configures and using TS `references`.
+
+```ts
+export default defineConfig({ tsconfig: './tsconfig.app.json' })
+```
+
+### devtools (Vite 8, experimental)
+
+Enable [Vite DevTools](https://github.com/vitejs/devtools) integration (requires `@vitejs/devtools*` packages). Cannot be set from a plugin `config` hook.
+
+```ts
+export default defineConfig({ devtools: { apply: 'serve' } })
 ```
 
 ## TypeScript Intellisense

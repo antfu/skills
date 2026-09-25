@@ -99,7 +99,7 @@ defineConfig({
     maxWorkers: 4,
     fileParallelism: true,
     
-    // Automatically clear mocks between tests
+    // Clear mock call history before each test (v5: defaults to true)
     clearMocks: true,
     
     // Restore spies created with vi.spyOn between tests
@@ -110,19 +110,53 @@ defineConfig({
     
     // Stop after first failure
     bail: 0,
+
+    // v5: repeat every test N times regardless of result (flaky-hunting)
+    repeats: 0,
+  },
+})
+```
+
+## v5 Performance Config
+
+```ts
+defineConfig({
+  test: {
+    // Persist transformed modules on disk, reused across reruns AND separate
+    // processes (stable in v5; was experimental.fsModuleCache). Cache lives in
+    // node_modules by default; clear with `vitest --clearCache`. Not for browser.
+    fsModuleCache: true,
+
+    // Inline projects that don't change the Vite config reuse the declaring
+    // config's Vite server (default true) — shared files transformed once.
+    // Set false if a plugin must be re-instantiated per project.
+    sharedViteServer: true,
+
+    // Inject CJS globals (module/exports/require/__filename/__dirname) into
+    // every module (default true). Set false for stricter ESM-like scope.
+    injectCjsGlobals: false,
+
+    // Detect async resources leaking past a test file (slow; debugging only)
+    detectAsyncLeaks: false,
   },
 })
 ```
 
 ## v4/v5 Config Changes
 
+- **v5 requires Vite >= 6.4.0 and Node >= 22.12.0.** `vite` is now a required peer dependency (Yarn users must `yarn add -D vite`).
+- **`clearMocks` defaults to `true`** in v5 — `vi.clearAllMocks()` runs before every test (history cleared, implementations kept). Set `clearMocks: false` for the old behavior.
+- **Inline projects inherit the root config by default** (`extends` defaults to `true`) — including Vite `plugins`/`resolve.alias`. Set `extends: false` to opt out. See [advanced-projects](advanced-projects.md).
+- **`testNamePattern` (`-t`) matches the `>`-joined full name** (`'math > adds'`), not the space-joined Jest form.
+- **`vi.mock`/`vi.unmock`/`vi.hoisted` must be at the top level** — nested calls now throw (they were only warned before).
 - **Pool default is `forks`** (child processes), not `threads`.
 - **`poolOptions` removed** — `maxThreads`/`maxForks` are now top-level `maxWorkers`; `singleThread`/`singleFork` become `maxWorkers: 1, isolate: false`; VM `memoryLimit` is `vmMemoryLimit`. `minWorkers` was removed.
 - **`workspace` removed** — use [`projects`](advanced-projects.md). `vitest.workspace.ts` no longer supported.
 - **`coverage.all` and `coverage.extensions` removed** — by default only covered files are reported; set `coverage.include` explicitly.
 - **Simplified `exclude`** — only `node_modules`/`.git` excluded by default. Use `test.dir` to scope discovery, or spread `configDefaults.exclude`.
 - **Config not looked up from parent dirs** — pass `--config` explicitly when running from a subdirectory.
-- **`.vitest` artifact dir** — blob reports (`.vitest/blob/`), attachments (`.vitest/attachments/`), and HTML report now live under a single `.vitest/` directory; add one entry to `.gitignore`.
+- **`.vitest` artifact dir** — blob reports (`.vitest/blob/`), attachments (`.vitest/attachments/`), and the `html`/`json`/`junit` reporters now all live under a single `.vitest/` directory; add one entry to `.gitignore`.
+- **`test.sequential`/`describe.sequential`/`sequential` removed** — use `{ concurrent: false }`.
 - `deps.optimizer.web` renamed to `deps.optimizer.client`; `deps.inline`/`deps.external` moved under `server.deps`.
 
 ## Conditional Configuration
@@ -173,7 +207,7 @@ defineConfig({
 - Use `--config` flag to specify a custom config path (required from subdirectories in v5)
 - `process.env.VITEST` is set to `true` when running tests
 - Test config uses `test` property, rest is Vite config
-- v4 requires **Vite >= 6** and **Node >= 20**; v5 is currently in beta
+- v5 requires **Vite >= 6.4.0** and **Node >= 22.12.0**; `vite` is a required peer dependency
 
 <!-- 
 Source references:

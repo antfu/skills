@@ -17,7 +17,7 @@ export default defineConfig({
 
 ## Usage
 
-`useDatabase()` (auto-imported when the flag is on, or import from `nitro/database`) returns a connection. Optional connection name defaults to `"default"`.
+Import `useDatabase()` from `nitro/database` (no auto-imports in v3). It returns a connection; the optional name defaults to `"default"`.
 
 ```ts [routes/users.ts]
 import { defineHandler } from "nitro";
@@ -83,14 +83,14 @@ Use a named connection with `useDatabase("users")`.
 
 ## Connectors
 
-All [db0 connectors](https://db0.unjs.io/connectors) are supported, including: `sqlite` / `node-sqlite`, `better-sqlite3`, `bun-sqlite`, `libsql` (+ `libsql-http`/`libsql-web`), `postgresql`, `mysql2`, `pglite`, `planetscale`, `cloudflare-d1`, and Cloudflare Hyperdrive variants.
+All [db0 connectors](https://db0.unjs.io/connectors) are supported, including: `sqlite` / `node-sqlite`, `better-sqlite3`, `sqlite3`, `bun` / `bun-sqlite`, `libsql` (+ `libsql-http`/`libsql-web`/`libsql-core`), `postgresql`, `mysql2`, `pglite`, `planetscale`, `neon`, `cloudflare-d1`, and Cloudflare Hyperdrive variants. Connector-specific settings (`url`, `host`, `name`, ...) go under `options`, not the top level. Third-party libs (e.g. `pg` for `postgresql`) are auto-detected/installed and passed via the connector's `lib` option.
 
 ## Key Points
 
 - Requires `experimental.database: true`; defaults to a zero-config SQLite connection.
-- `useDatabase()` from `nitro/database` (auto-imported when enabled); names default to `"default"`.
+- `useDatabase()` from `nitro/database` (explicit import — no auto-imports in v3); names default to `"default"`.
 - Prefer `db.sql` tagged templates for safe, parameterized queries.
-- Use `devDatabase` to run a different (local) database in development.
+- `devDatabase` **replaces** `database` entirely in dev (not merged per-name) — include every connection you need.
 - Integrates with db0-supported ORMs; prefer this layer over platform-specific DB bindings for portability.
 
 <!--

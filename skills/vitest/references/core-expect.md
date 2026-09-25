@@ -63,9 +63,12 @@ expect({ a: 1 }).not.toEqual({ a: 2 })
 ```ts
 // Sync errors - wrap in function
 expect(() => throwError()).toThrow()
-expect(() => throwError()).toThrow('message')
+expect(() => throwError()).toThrow('message') // string = substring of the message
 expect(() => throwError()).toThrow(/pattern/)
 expect(() => throwError()).toThrow(CustomError)
+
+// v5: toThrow('') matches ANY message (empty string is a substring of all).
+// To assert an empty message, match the pattern: .toThrow(/^$/)
 
 // Async errors - use rejects
 await expect(asyncThrow()).rejects.toThrow('error')
@@ -82,6 +85,8 @@ await expect(fetchData()).resolves.toEqual({ data: true })
 await expect(Promise.reject('error')).rejects.toBe('error')
 await expect(failingFetch()).rejects.toThrow()
 ```
+
+> **v5:** unawaited async assertions (`resolves`, `rejects`, `toMatchFileSnapshot`) now **fail the test** — v4 only printed a warning and auto-awaited at the end. Always `await` them.
 
 ## Spy/Mock Assertions
 
@@ -216,6 +221,15 @@ await expect.poll(
 ).toBeTruthy()
 ```
 
+> **v5:** `expect.poll` now **rejects when it times out** (v4 could still pass on a late attempt). The callback receives an `AbortSignal` that aborts on timeout so you can cancel in-flight work:
+
+```ts
+await expect.poll(async ({ signal }) => {
+  const res = await fetch('/api/status', { signal })
+  return res.status
+}, { timeout: 1000 }).toBe(200)
+```
+
 ## Assertion Count
 
 ```ts
@@ -251,6 +265,23 @@ test('custom matcher', () => {
   expect(100).toBeWithinRange(90, 110)
 })
 ```
+
+### TypeScript Declarations (v5)
+
+The `Matchers` interface now takes the **return type first** (`R`) and the received type second (`T`). `R` is `void` synchronously, `Promise<void>` through `.resolves`/`.rejects`/`expect.poll`/`expect.element`:
+
+```ts
+import 'vitest'
+
+declare module 'vitest' {
+  interface Matchers<R, T> {
+    toBeFoo: () => R
+    toEqualTyped: (expected: T) => R // T mirrors the received value's type
+  }
+}
+```
+
+Referencing assertion types directly also needs the return type first: `Assertion<void, string>` (sync) / `Assertion<Promise<void>, string>` (async). v5 no longer reads matchers from the global `jest.Matchers` interface — augment `vitest.Matchers` separately.
 
 ## Snapshot Assertions
 

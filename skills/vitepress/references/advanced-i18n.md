@@ -113,7 +113,7 @@ Each locale can override:
 ```ts
 interface LocaleSpecificConfig {
   lang?: string
-  dir?: string              // 'ltr' or 'rtl'
+  dir?: 'ltr' | 'rtl' | 'auto'
   title?: string
   titleTemplate?: string | boolean
   description?: string
@@ -225,34 +225,50 @@ watchEffect(() => {
 </template>
 ```
 
-## RTL Support (Experimental)
+## Per-locale Markdown Strings (v2)
 
-For right-to-left languages:
+Override renderer-baked strings (custom container / GitHub-alert default titles,
+code copy button text) per locale via the `markdown` key. Values fall back to the
+root `markdown` options. Must live in the main config (the renderer is created
+once for the whole site); registering new containers per-locale is unsupported.
 
 ```ts
 locales: {
-  ar: {
-    label: 'العربية',
-    lang: 'ar',
-    dir: 'rtl'
+  root: { label: 'English', lang: 'en' },
+  zh: {
+    label: '简体中文',
+    lang: 'zh-Hans',
+    markdown: {
+      container: { tipLabel: '提示', warningLabel: '警告' },
+      codeCopyButton: { tooltipText: '复制代码', copiedText: '已复制' }
+    }
   }
 }
 ```
 
-Requires PostCSS plugin like `postcss-rtlcss`:
+## Custom Locale Link (i18nRouting) (v2)
+
+Set `themeConfig.i18nRouting` to a function to customize the target link when
+switching locale (see theme-config).
+
+## RTL Support (v2)
+
+Native, no longer experimental. Set `dir: 'rtl'` (site-wide, per-locale, or per
+page via frontmatter). The default theme uses CSS logical properties, so layout,
+nav, and directional icons mirror automatically — **do not** add an RTLCSS
+PostCSS plugin (it would double-flip). Code blocks stay LTR.
 
 ```ts
-// postcss.config.js
-import rtlcss from 'postcss-rtlcss'
-
-export default {
-  plugins: [
-    rtlcss({
-      ltrPrefix: ':where([dir="ltr"])',
-      rtlPrefix: ':where([dir="rtl"])'
-    })
-  ]
+locales: {
+  ar: { label: 'العربية', lang: 'ar', dir: 'rtl' }
 }
+```
+
+For your own styles, prefer logical properties (`margin-inline-start`) and mirror
+custom directional icons:
+
+```css
+[dir='rtl'] .my-arrow-icon { scale: -1 1; }
 ```
 
 ## Organizing Config
@@ -290,7 +306,8 @@ export default defineConfig({
 - Each locale can override title, description, and themeConfig
 - `themeConfig` is shallow merged (define complete nav/sidebar per locale)
 - Don't override `themeConfig.algolia` at locale level
-- `dir: 'rtl'` enables RTL with PostCSS plugin
+- v2: `dir: 'rtl'` enables native RTL (CSS logical properties) — no PostCSS plugin
+- v2: override renderer strings per locale via the `markdown` key; customize the switch link via `i18nRouting` function
 - Language switcher appears automatically in nav
 
 <!--

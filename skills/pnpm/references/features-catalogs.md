@@ -80,6 +80,17 @@ Reference named catalogs:
 }
 ```
 
+## workspace:, file:, and link: entries
+
+A catalog entry may hold a `workspace:` range (v12.2.0), so the version a workspace dependency links by is defined once too. It expands to the range and links the project; on publish both protocols are replaced.
+
+```yaml title="pnpm-workspace.yaml"
+catalog:
+  '@example/utils': workspace:^
+  my-lib: link:./packages/my-lib     # v12.6.0; path measured from pnpm-workspace.yaml
+  my-tarball: file:./tarballs/foo.tgz
+```
+
 ## Keeping overrides in sync with a catalog
 
 Reference a catalog from `overrides` so the version lives in exactly one place:
@@ -98,7 +109,7 @@ overrides:
 # How `pnpm add` interacts with the default catalog (v10.12+)
 catalogMode: manual        # manual (default) | prefer | strict
 # strict: only catalog versions allowed; prefer: fall back if no match
-cleanupUnusedCatalogs: true  # remove unused catalog entries on install (v10.15+)
+catalogPrune: true         # remove unused catalog entries on install (v11.22+; was cleanupUnusedCatalogs)
 ```
 
 ## Benefits

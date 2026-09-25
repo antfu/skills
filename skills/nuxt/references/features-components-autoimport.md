@@ -63,6 +63,27 @@ With `pathPrefix: false`:
 components/base/Button.vue → <Button />
 ```
 
+### Grouping Directories
+
+Wrap a directory name in parentheses to group files without affecting the component name:
+
+```
+components/base/(foo)/Button.vue → <BaseButton />
+```
+
+### `pattern` / `ignore` Globs
+
+Each `components` dir entry accepts `pattern` and `ignore` globs to scan non-standard layouts (e.g. domain-driven structure). When `pattern` is set, the `extensions` option is ignored:
+
+```ts
+export default defineNuxtConfig({
+  components: [
+    // ~/domains/blog/components/PostCard.vue => <PostCard />
+    { path: '~/domains', pattern: '*/components/**', pathPrefix: false },
+  ],
+})
+```
+
 ## Lazy Loading
 
 Prefix with `Lazy` for dynamic imports:

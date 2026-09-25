@@ -37,7 +37,8 @@ export default defineConfig({
   titleTemplate: ':title - Docs', // Page title format (:title = h1)
   description: 'Site description', // Meta description
   lang: 'en-US',                 // HTML lang attribute
-  
+  dir: 'ltr',                    // Text direction: 'ltr' | 'rtl' | 'auto' (see i18n RTL)
+
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico' }],
     ['meta', { name: 'theme-color', content: '#5f67ee' }],
@@ -72,6 +73,45 @@ export default defineConfig({
   
   // Get last updated timestamp from git
   lastUpdated: true
+})
+```
+
+## Base URL & Relocatable Builds
+
+`base` must start and end with `/` for sub-path deployment. The one exception is
+`'./'`, which produces a **relocatable build**: every page references assets and
+other pages relative to its own location, so the same output works from any
+sub-path (IPFS gateways, archives, `file://`) without rebuilding. Keep
+`cleanUrls` off for relocatable builds. Can also be set per build with
+`vitepress build --base /base/`.
+
+## Serving Assets from a CDN (v2)
+
+```ts
+export default defineConfig({
+  base: '/',
+  assetsBase: 'https://cdn.example.com/', // scripts, styles, fonts, imported images → CDN
+  assetsShards: 4 // spread assets over assets/0..N-1 (for hosts that cap files per dir)
+})
+```
+
+Upload `outDir/assets` to the CDN so it is reachable at `<assetsBase>/assets/*`.
+HTML pages, `public/` files, and Markdown links stay on `base`. A cross-origin
+CDN must send `Access-Control-Allow-Origin` (module scripts are fetched in CORS
+mode). Can also be passed per build: `vitepress build --assetsBase "$CDN_URL"`.
+
+## Icons (v2)
+
+The build collects iconify icons rendered during SSR and emits their styles.
+Icons rendered only on the client (inside `<ClientOnly>` or after hydration)
+must be listed explicitly. Names are `collection:name`, resolved against the
+`@iconify-json/*` packages in your dependencies.
+
+```ts
+export default defineConfig({
+  icons: {
+    include: ['mdi:home', 'simple-icons:discord']
+  }
 })
 ```
 
@@ -124,10 +164,14 @@ export default defineConfig({
     lineNumbers: true,
     toc: { level: [1, 2, 3] },
     math: true, // Requires markdown-it-mathjax3
+    headers: true, // Collect headings into useData().page.headers (off by default)
+    image: { lazyLoad: true }, // Renamed from `lazyLoading` in v2
     container: {
       tipLabel: 'TIP',
       warningLabel: 'WARNING',
-      dangerLabel: 'DANGER'
+      dangerLabel: 'DANGER',
+      // Register additional containers → default titles (v2)
+      customContainers: { success: 'SUCCESS' }
     }
   }
 })
@@ -157,6 +201,40 @@ export default defineConfig({
 })
 ```
 
+## Directory-Level Overrides (v2)
+
+Override config settings for all pages in a directory by adding a `config.ts`
+(or `.js`/`.mjs`/`.mts`) in that directory. Nested directories inherit and merge
+from their parent. Use `defineAdditionalConfig` for intellisense.
+
+```ts
+// es/config.ts
+import { defineAdditionalConfig } from 'vitepress'
+
+export default defineAdditionalConfig({
+  description: 'Generador de Sitios Estáticos con Vite y Vue.'
+})
+```
+
+Only certain settings support this (title, titleTemplate, description, head,
+lang, dir). The markdown renderer is created once for the whole site, so
+markdown/per-locale markdown strings can only live in the main config.
+
+## Typed Theme Config
+
+`defineConfigWithTheme` is deprecated in v2. Pass the theme config type to
+`defineConfig` instead:
+
+```ts
+import { defineConfig } from 'vitepress'
+import type { ThemeConfig } from 'awesome-vitepress-theme'
+
+export default defineConfig<ThemeConfig>({
+  extends: baseConfig,
+  themeConfig: { /* typed as ThemeConfig */ }
+})
+```
+
 ## Dynamic Config
 
 For async configuration:
@@ -177,13 +255,15 @@ export default async () => {
 ## Key Points
 
 - Config file supports `.js`, `.ts`, `.mjs`, `.mts` extensions
-- Use `defineConfig` for TypeScript support
-- `base` must start and end with `/` for sub-path deployments
+- Use `defineConfig` for TypeScript support (`defineConfig<ThemeConfig>` for typed theme config; `defineConfigWithTheme` is deprecated)
+- `base` must start and end with `/`; `base: './'` enables relocatable builds
 - `srcDir` separates source files from project root
 - Build hooks enable custom transformations and post-processing
+- v2: `assetsBase`/`assetsShards`/`icons` are new; `metaChunk` was removed; `defineAdditionalConfig` enables directory-level overrides
 
 <!--
 Source references:
 - https://vitepress.dev/reference/site-config
 - https://vitepress.dev/guide/getting-started
+- https://vitepress.dev/guide/asset-handling
 -->

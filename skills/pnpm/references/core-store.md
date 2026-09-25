@@ -90,10 +90,11 @@ du -sh --apparent-size node_modules  # With hard links counted
 
 ## Global Virtual Store
 
-With `enableGlobalVirtualStore: true`, projects skip the per-project `node_modules/.pnpm` directory entirely; their `node_modules` contains only symlinks into one shared virtual store at `<store-path>/links/`, keyed by dependency-graph hash. In pnpm v11 it is the default for `pnpm dlx`/`pnx` and global installs; for project installs it is still opt-in. See `features-global-virtual-store` for details and the git-worktrees multi-agent workflow.
+With `virtualStoreType: global`, projects skip the per-project `node_modules/.pnpm` directory entirely; their `node_modules` contains only symlinks into one shared virtual store at `<store-path>/links/`, keyed by dependency-graph hash. It is the default for `pnpm dlx`/`pnx` and global installs; for project installs it is still opt-in. See `features-global-virtual-store` for details and the git-worktrees multi-agent workflow.
 
 ```yaml title="pnpm-workspace.yaml"
-enableGlobalVirtualStore: true
+virtualStoreType: global    # canonical spelling since v11.23.0
+# enableGlobalVirtualStore: true   # older spelling, still works
 ```
 
 ## Node Linker Modes
@@ -166,9 +167,11 @@ pnpm store prune
 
 ### Hard link issues (network drives, Docker)
 ```yaml title="pnpm-workspace.yaml"
-# auto (default) tries clone -> hardlink -> copy
-packageImportMethod: copy
+# auto (default): on Linux (v12) tries hardlink -> clone -> copy; macOS is clone-first (APFS)
+packageImportMethod: copy       # copy | clone | clone-or-copy | hardlink
 ```
+
+> v12 change: on Linux `packageImportMethod: auto` hardlinks before reflinking (roughly halves materialize time on btrfs). Use `clone` (or `clone-or-copy`) if you edit files inside `node_modules`, since a hardlinked file *is* the store's file.
 
 ### Permission issues
 ```bash
@@ -180,6 +183,7 @@ chmod -R u+w "$(pnpm store path)"
 Source references:
 - https://pnpm.io/symlinked-node-modules-structure
 - https://pnpm.io/cli/store
-- https://pnpm.io/settings#storedir
+- https://pnpm.io/settings/store
+- https://pnpm.io/settings/node-modules
 - https://pnpm.io/global-virtual-store
 -->

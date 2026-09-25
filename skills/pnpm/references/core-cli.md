@@ -7,6 +7,8 @@ description: Essential pnpm commands for package management, running scripts, wo
 
 pnpm provides a comprehensive CLI. Commands resemble npm/yarn but with unique features.
 
+> **pnpm v12 is a Rust rewrite** of v11, stable, keeping v11's commands, flags, settings, and lockfile format. A few behaviors differ (see best-practices-migration). One removed flag fails outright: `pnpm install --resolution-only` is gone — use `pnpm peers check`.
+
 ## Installation Commands
 
 ```bash
@@ -55,7 +57,18 @@ pnx shx@catalog:                # catalog: protocol supported
 pnx --package=@scope/tool tool --help
 ```
 
-> `dlx`/`pnx` honor supply-chain settings (`minimumReleaseAge`, `trustPolicy`) and use the global virtual store by default in v11.
+> `dlx`/`pnx` honor supply-chain settings (`minimumReleaseAge`, `trustPolicy`) and use the global virtual store by default. In an interactive terminal they prompt to approve a dependency's skipped build scripts (or use `--allow-build`).
+
+### Run another package manager / runtime with pnx (v12)
+
+Naming a package manager (`npm`, `yarn`, `bun`) or runtime (`node`, `deno`, `bun`) provisions the real thing, not the npm package of that name:
+
+```bash
+pnx yarn@4 install
+pnx npm@11 ci
+pnx node@22 --version
+pnx yarn@npm:yarn@1.22.22       # a specifier that locates a package installs it unchanged
+```
 
 ## Workspace Commands
 
@@ -105,7 +118,19 @@ pnpm list -g
 pnpm bin -g                       # show global bin dir ($PNPM_HOME/bin)
 ```
 
-> `pnpm install -g` (no args) is not supported. After upgrading to v11 run `pnpm setup` so `$PNPM_HOME/bin` is on PATH.
+> `pnpm install -g` (no args) is not supported. After upgrading run `pnpm setup` so `$PNPM_HOME/bin` is on PATH.
+
+## Project-aware command shims (v12)
+
+Global `node`/`deno`/`bun` (and shimmed tools) run the version the current project pins. Create shims for tools with no global install behind them:
+
+```bash
+pnpm shim add yarn      # `yarn` runs whatever version the current project pins
+pnpm shim ls
+pnpm shim rm yarn
+```
+
+> Shims are never written as a side effect of `pnpm setup`/install (a shim shadows PATH). Governed by the `globalShims` setting. See features-global-virtual-store.
 
 ## Runtimes (Node/Deno/Bun)
 
@@ -145,13 +170,42 @@ pnpm dedupe
 ```bash
 pnpm pack
 pnpm publish -r --no-git-checks
-pnpm version patch|minor|major|2.0.0    # bump version, commit + tag (v11)
+pnpm version patch|minor|major|2.0.0    # bump version, commit + tag
 pnpm version prerelease --preid beta
 pnpm deprecate <pkg>@<range> "message"
 pnpm dist-tag add <pkg>@<version> <tag>
 pnpm unpublish <pkg>@<version>          # discouraged; prefer deprecate
 pnpm sbom --sbom-format cyclonedx       # SBOM: cyclonedx (1.7) | spdx (2.3)
 pnpm stage publish ...                  # staged publishing (defer 2FA)
+```
+
+## Release management (native, v11.13+)
+
+```bash
+pnpm change                    # record a change intent in .changeset/
+pnpm change status             # pending intents + release plan
+pnpm change check              # validate committed versions vs epics/fixed groups (CI)
+pnpm version -r [--dry-run]    # consume intents: bump, changelog, ledger (no git tag)
+pnpm lane <name> --filter <p>  # move package(s) onto a release lane
+```
+
+See features-versioning for the full workflow.
+
+## Task orchestration & pipelines
+
+```bash
+pnpm -r run <script>           # runs the tasks graph (see features-task-orchestration)
+pnpm -r run --dry-run build    # inspect the graph
+pnpm tasks status              # running/waiting tasks per concurrency group (v12.6)
+pnpm pipeline [name]           # cached CI-style run (v12.4, experimental)
+```
+
+## Cache (registry metadata)
+
+```bash
+pnpm cache path
+pnpm cache prune
+pnpm cache view <pkg>
 ```
 
 ## Maintenance & version management
@@ -179,7 +233,8 @@ pnpm install --strict-peer-dependencies
 - `dlx`/`pnpx` are aliases of `pnx`; global installs are now isolated per package (comma-list to share).
 - `pnpm link` only takes paths; use `pnpm add -g .` for global bins.
 - Manage Node/Deno/Bun with `pnpm runtime set`; skip them at install with `--no-runtime`.
-- New publishing/registry commands: `version`, `view`, `whoami`, `deprecate`, `dist-tag`, `unpublish`, `sbom`, `stage`.
+- Publishing/registry commands: `version`, `view`, `whoami`, `deprecate`, `dist-tag`, `unpublish`, `sbom`, `stage`.
+- v12 adds native releases (`change`, `version -r`, `lane`), task inspection (`tasks status`), `pipeline`, `shim`, and `cache` commands; `pnx` can run other package managers/runtimes.
 
 <!--
 Source references:
@@ -193,4 +248,10 @@ Source references:
 - https://pnpm.io/cli/version
 - https://pnpm.io/cli/with
 - https://pnpm.io/cli/sbom
+- https://pnpm.io/cli/change
+- https://pnpm.io/cli/lane
+- https://pnpm.io/cli/tasks
+- https://pnpm.io/cli/pipeline
+- https://pnpm.io/cli/shim
+- https://pnpm.io/cli/pnx
 -->

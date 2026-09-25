@@ -1,5 +1,5 @@
 # Generation Info
 
 - **Source:** `sources/nitro`
-- **Git SHA:** `6de81eef256aa765e9be3c9cb37beefe23e6b150`
-- **Generated:** 2026-06-22
+- **Git SHA:** `076ef12947c6509b1cdd956d130a6c77209a1223`
+- **Generated:** 2026-09-25

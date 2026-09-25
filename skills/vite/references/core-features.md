@@ -5,6 +5,8 @@ description: Vite-specific import patterns and runtime features
 
 # Vite Features
 
+> Vite 8: TS/JSX transforms run on **Oxc** (`oxc` option, not `esbuild`), dep pre-bundling on **Rolldown**, and CSS minification on **Lightning CSS** by default. `esbuild`/`rollupOptions` still work as deprecated aliases.
+
 ## Glob Import
 
 Import multiple modules matching a pattern:
@@ -53,6 +55,13 @@ const modules = import.meta.glob(['./dir/*.ts', '!**/ignored.ts'])
 ```ts
 const svgRaw = import.meta.glob('./icons/*.svg', { query: '?raw', import: 'default' })
 const svgUrls = import.meta.glob('./icons/*.svg', { query: '?url', import: 'default' })
+```
+
+### Case-Insensitive Matching (Vite 8)
+
+```ts
+// matches Module.js, module.js, MODULE.js
+const modules = import.meta.glob('./dir/module*.js', { caseSensitive: false })
 ```
 
 ## Asset Import Queries
@@ -195,6 +204,31 @@ if (import.meta.hot) {
   import.meta.hot.invalidate()  // Force full reload
 }
 ```
+
+## WebAssembly
+
+### ESM Integration (Vite 8)
+
+Import a `.wasm` file directly — Vite instantiates it and re-exposes its exports as named ESM exports. Behaves as an async module (needs top-level `await`):
+
+```js
+import { add } from './add.wasm'
+console.log(add(1, 2)) // 3
+```
+
+For TS support, enable `allowArbitraryExtensions` and add `add.d.wasm.ts`. SSR builds rely on `node:fs`, so this only works in Node-compatible runtimes.
+
+### Manual Initialization
+
+```js
+import init from './example.wasm?init'
+const instance = await init({ imports: { /* ... */ } })
+instance.exports.test()
+```
+
+## Chunk Import Map Optimization (Vite 8, experimental)
+
+Set `build.chunkImportMap: true` to reference chunks by stable ID via an import map instead of hashed URLs. Prevents cascading cache invalidation (updating a leaf chunk no longer invalidates its importers). Requires `import.meta.resolve` support (use `@vitejs/plugin-legacy` for older browsers).
 
 <!--
 Source references:

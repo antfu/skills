@@ -302,6 +302,18 @@ app.directive('focus', {
 })
 ```
 
+Type global directives by extending the `GlobalDirectives` interface (not `ComponentCustomProperties`):
+
+```ts
+import type { Directive } from 'vue'
+
+declare module 'vue' {
+  interface GlobalDirectives {
+    vFocus: Directive<HTMLElement>
+  }
+}
+```
+
 <!--
 Source references:
 - https://vuejs.org/api/built-in-components.html

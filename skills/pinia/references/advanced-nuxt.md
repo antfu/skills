@@ -13,7 +13,7 @@ Pinia works seamlessly with Nuxt 3/4, handling SSR, serialization, and XSS prote
 npx nuxi@latest module add pinia
 ```
 
-This installs both `@pinia/nuxt` and `pinia`. If `pinia` isn't installed, add it manually.
+This installs both `@pinia/nuxt` and `pinia`. If `pinia` isn't installed, add it manually along with `@vue/devtools-api`, which since Pinia v4 is a **required peer dependency** used by the devtools integration: `npm i pinia @vue/devtools-api`.
 
 > **npm users:** If you get `ERESOLVE unable to resolve dependency tree`, add to `package.json`:
 > ```json

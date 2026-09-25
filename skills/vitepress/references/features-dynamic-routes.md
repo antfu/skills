@@ -38,6 +38,28 @@ Generated pages:
 - `/packages/bar.html`
 - `/packages/baz.html`
 
+## Type-safe Loader with `defineRoutes` (v2)
+
+In TypeScript, wrap the loader with `defineRoutes` for type hints on `paths`,
+`watch`, and `transformPageData`:
+
+```ts
+// packages/[pkg].paths.ts
+import { defineRoutes } from 'vitepress'
+
+export default defineRoutes({
+  watch: ['../data/**/*.json'],
+  async paths() {
+    return [{ params: { pkg: 'foo' } }, { params: { pkg: 'bar' } }]
+  },
+  async transformPageData(pageData) {
+    pageData.title = `${pageData.title} · Packages`
+  }
+})
+```
+
+`defineRoutes` is optional but recommended when authoring `.paths.ts` files.
+
 ## Multiple Parameters
 
 ```
@@ -228,6 +250,7 @@ layout: doc
 - Use `$params` in templates or `useData().params` in scripts
 - Use `content` for heavy data to avoid client bundle bloat
 - `watch` enables HMR for template/data file changes
+- v2: wrap `.paths.ts` loaders with `defineRoutes` for type hints
 
 <!--
 Source references:

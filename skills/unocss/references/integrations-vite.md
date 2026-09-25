@@ -151,7 +151,14 @@ Supports `class:foo` and `class:foo={bar}` syntax.
 
 ### SvelteKit
 
-Same as Svelte, use `sveltekit()` from `@sveltejs/kit/vite`.
+Same as Svelte, use `sveltekit()` from `@sveltejs/kit/vite`. In the default global mode there is no `main.ts` entry, so import the stylesheet from the root layout:
+
+```svelte
+<!-- src/routes/+layout.svelte -->
+<script>
+  import 'virtual:uno.css'
+</script>
+```
 
 ### Solid
 

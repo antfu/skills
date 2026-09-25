@@ -60,6 +60,16 @@ vitest list --json             # Output as JSON
 vitest list --filesOnly        # List only test files
 ```
 
+> v5: `list` parses test files **statically** instead of running them. Pass `--no-static-parse` to run them; tune with `--static-parse-concurrency`.
+
+### `vitest doctor` (v5)
+
+Run the suite under alternative configs and recommend faster options (e.g. a different `pool`, `isolate: false`, `fsModuleCache`, lower `maxWorkers`). Needs a passing baseline; takes several times a normal run:
+
+```bash
+vitest doctor
+```
+
 ### `vitest init`
 
 Initialize project setup:
@@ -82,7 +92,7 @@ vitest --list-tags=json        # JSON output
 ```bash
 # Configuration
 --config <path>           # Path to config file
---project <name>          # Run specific project
+--project, -p <name>      # Run specific project (v5 adds the -p shorthand)
 
 # Filtering
 --testNamePattern, -t     # Run tests matching pattern
@@ -104,6 +114,7 @@ vitest --list-tags=json        # JSON output
 --shard <index>/<count>   # Split tests across machines
 --bail <n>                # Stop after n failures
 --retry <n>               # Retry failed tests n times
+--repeats <n>             # v5: repeat every test n times (hunt flaky tests)
 --shuffle                 # Randomize test order
 --no-file-parallelism     # Run test files one at a time
 
@@ -169,7 +180,8 @@ In watch mode, press:
 - Both camelCase (`--testTimeout`) and kebab-case (`--test-timeout`) work
 - Boolean options can be negated with `--no-` prefix
 - Filter tests by tag with `--tagsFilter` (tags must be declared in config) — see [features-test-tags](features-test-tags.md)
-- `--merge-reports` and `--reporter=blob` do not work in watch mode
+- `--merge-reports` and `--reporter=blob` do not work in watch mode (`--merge-reports` now handles non-sharded multi-environment runs)
+- v5: use `-p` as shorthand for `--project`; `vitest doctor` suggests faster config
 
 <!-- 
 Source references:

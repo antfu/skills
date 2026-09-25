@@ -139,6 +139,9 @@ vi.useFakeTimers()
 vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
 vi.useFakeTimers({ toNotFake: ['setInterval'] })
 
+// v5: Temporal is faked alongside Date when present on globalThis;
+// exclude it with toNotFake: ['Temporal']
+
 setTimeout(() => console.log('done'), 1000)
 
 // Advance time
@@ -168,6 +171,7 @@ vi.useRealTimers()
 ```ts
 vi.setSystemTime(new Date('2024-01-01'))
 expect(new Date().getFullYear()).toBe(2024)
+// v5: also drives Temporal.Now when Temporal is available
 
 vi.getMockedSystemTime()  // Get mocked date
 vi.getRealSystemTime()    // Get real time (ms)

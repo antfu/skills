@@ -74,15 +74,13 @@ build: {
 
 ## Multi-Page App
 
+Prefer the top-level `input` option (Vite 8) — it applies in dev too:
+
 ```ts
 export default defineConfig({
-  build: {
-    rolldownOptions: {
-      input: {
-        main: resolve(import.meta.dirname, 'index.html'),
-        nested: resolve(import.meta.dirname, 'nested/index.html'),
-      },
-    },
+  input: {
+    main: resolve(import.meta.dirname, 'index.html'),
+    nested: resolve(import.meta.dirname, 'nested/index.html'),
   },
 })
 ```
@@ -119,6 +117,8 @@ server.printUrls()
 
 ### build
 
+Returns `RolldownOutput | RolldownOutput[] | RolldownWatcher` (was `RollupOutput` in Vite 7). On failure it throws a `BundleError` — inspect `e.errors`.
+
 ```ts
 import { build } from 'vite'
 
@@ -126,6 +126,17 @@ await build({
   root: './project',
   build: { outDir: 'dist' },
 })
+```
+
+### createBuilder (Vite 8, environment-aware)
+
+Use `createBuilder` instead of `build` to build all configured environments (Environment API):
+
+```ts
+import { createBuilder } from 'vite'
+
+const builder = await createBuilder()
+await builder.buildApp()
 ```
 
 ### preview

@@ -142,6 +142,10 @@ export default {
 }
 ```
 
+Set `base: './'` for a **relocatable build** (v2): pages reference everything
+relative to their own location, so the same output works from any sub-path or
+`file://` without rebuilding. Keep `cleanUrls` off when doing this.
+
 All absolute paths are automatically prefixed with base. For dynamic paths in components, use `withBase`:
 
 ```vue
@@ -161,6 +165,8 @@ import { withBase } from 'vitepress'
 - `srcDir` separates source from config
 - `cleanUrls` removes `.html` but requires server support
 - `rewrites` enables complex source structures with clean output URLs
+- `base: './'` produces a relocatable build that runs from any path or `file://`
+- Dynamic routes: wrap `.paths.ts` loaders with `defineRoutes` for type hints (see dynamic-routes)
 
 <!--
 Source references:

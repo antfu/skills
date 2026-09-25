@@ -7,6 +7,8 @@ description: Nuxt CLI commands for development, building, and project management
 
 Nuxt provides CLI commands via `nuxi` (or `npx nuxt`) for development, building, and project management.
 
+> The CLI reference now lives in the [`nuxt/cli`](https://github.com/nuxt/cli) repo (its docs moved out of the main Nuxt repo). Commands and flags are unchanged.
+
 ## Project Initialization
 
 ### Create New Project
@@ -256,8 +258,6 @@ npx nuxt build --extends ./base-layer
 
 <!-- 
 Source references:
-- https://nuxt.com/docs/api/commands/dev
-- https://nuxt.com/docs/api/commands/build
-- https://nuxt.com/docs/api/commands/generate
-- https://nuxt.com/docs/api/commands/init
+- https://github.com/nuxt/cli
+- https://nuxt.com/docs/api/commands
 -->

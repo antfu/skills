@@ -109,6 +109,13 @@ transformers: [
 ]
 ```
 
+### processors
+Transform generated CSS layers after generation (runs after transformers). See [core-processors](core-processors.md).
+
+```ts
+processors: [processorLightningCSS({ targets: { chrome: 111 << 16 } })]
+```
+
 ### variants
 Preprocess selectors with ability to rewrite CSS output.
 

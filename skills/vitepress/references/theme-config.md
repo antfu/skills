@@ -133,7 +133,8 @@ sidebar: [
 
 ### Base Path
 
-Simplify links with common base:
+Simplify links with common base. `base` works at the root of a sidebar section
+and inside nested groups (a nested `base` overrides the parent prefix):
 
 ```ts
 sidebar: {
@@ -145,6 +146,25 @@ sidebar: {
     ]
   }
 }
+```
+
+```ts
+sidebar: [
+  {
+    text: 'Reference',
+    base: '/reference/',
+    items: [
+      { text: 'Site Config', link: 'site-config' }, // /reference/site-config
+      {
+        text: 'Default Theme',
+        base: '/reference/default-theme-', // overrides parent base
+        items: [
+          { text: 'Nav', link: 'nav' } // /reference/default-theme-nav
+        ]
+      }
+    ]
+  }
+]
 ```
 
 ## Search
@@ -194,7 +214,9 @@ search: {
 socialLinks: [
   { icon: 'github', link: 'https://github.com/...' },
   { icon: 'twitter', link: 'https://twitter.com/...' },
-  { icon: 'discord', link: 'https://discord.gg/...' },
+  { icon: 'discord', link: '/community', target: '_self' }, // v2: `target`
+  // v2: any iconify collection installed as `collection:name`
+  { icon: 'lucide:rss', link: '/feed.rss' },
   // Custom SVG
   {
     icon: { svg: '<svg>...</svg>' },
@@ -287,14 +309,49 @@ docFooter: {
 externalLinkIcon: true  // Show icon on external links
 ```
 
-## Appearance Toggle Labels
+## Graded Containers (v2)
+
+```ts
+gradedContainers: true // danger red, warning orange, caution yellow
+```
+
+Colors custom containers, GitHub-flavored alerts, and badges on a graded
+severity scale. Default (`false`) matches GitHub (caution shares danger's red).
+
+## i18n Routing (v2)
+
+`i18nRouting` accepts a boolean, or a function to customize the locale link:
+
+```ts
+i18nRouting(data, route, targetLocale) {
+  const target = data.site.value.locales[targetLocale]
+  const link = target.link || (targetLocale === 'root' ? '/' : `/${targetLocale}/`)
+  return `${link}${route.data.relativePath.replace(/\.md$/, '')}${route.hash}`
+}
+```
+
+## Carbon Ads
+
+```ts
+carbonAds: {
+  code: 'your-carbon-code',
+  placement: 'your-carbon-placement',
+  format: 'classic' // v2: 'classic' | 'responsive' | 'cover'
+}
+```
+
+## Appearance & Accessible Labels
 
 ```ts
 darkModeSwitchLabel: 'Appearance',
 lightModeSwitchTitle: 'Switch to light theme',
 darkModeSwitchTitle: 'Switch to dark theme',
 sidebarMenuLabel: 'Menu',
-returnToTopLabel: 'Return to top'
+returnToTopLabel: 'Return to top',
+// v2 navigation landmark labels:
+navMenuLabel: 'Main Navigation',   // navbar/mobile menu landmarks
+mobileMenuLabel: 'Menu',           // hamburger button aria-label
+extraMenuLabel: 'More options'     // `⋯` overflow menu button aria-label
 ```
 
 ## Key Points
@@ -305,6 +362,7 @@ returnToTopLabel: 'Return to top'
 - Local search works out of the box
 - `editLink.pattern` uses `:path` placeholder
 - Enable `lastUpdated` in site config, customize in themeConfig
+- v2: social links accept `target` and iconify `collection:name` icons; sidebar `base` works in nested groups; `gradedContainers` and `i18nRouting` functions are new
 
 <!--
 Source references:

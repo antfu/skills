@@ -45,6 +45,10 @@ defineConfig({
         branches: 80,
         statements: 80,
       },
+
+      // v5 (v8 only): also cover node:child_process / node:worker_threads
+      // spawned during the run (adds overhead via NODE_V8_COVERAGE)
+      autoAttachSubprocess: false,
     },
   },
 })
@@ -106,6 +110,7 @@ coverage: {
     perFile: true,
     
     // Auto-update thresholds (for gradual improvement)
+    // v5: a function receives (newThreshold, previousThreshold)
     autoUpdate: true,
 
     // v5: glob thresholds no longer inherit top-level `perFile` — set it per glob
@@ -192,6 +197,13 @@ vitest run --shard=3/3 --coverage --reporter=blob
 
 vitest --merge-reports --coverage --reporter=json
 ```
+
+## v5 Changes
+
+- **`include`/`exclude` match relative paths** (not absolute-with-`contains`), so patterns catch fewer files than v4 — a wildcard-free pattern like `'src'` means `src/**`. Re-verify the reported file set after upgrading.
+- **Glob thresholds don't inherit top-level `perFile`** — set `perFile` on each glob that needs it.
+- **`coverage.autoAttachSubprocess`** (v8) tracks child-process/worker-thread coverage.
+- **Istanbul moved to the maintained [`@vitest/istanbuljs`](https://github.com/vitest-dev/istanbuljs) fork**; the v8 provider merges reports with bounded memory.
 
 ## v4 Changes
 

@@ -5,7 +5,21 @@ description: Migrating from npm or Yarn to pnpm with minimal friction
 
 # Migration to pnpm
 
-Guide for migrating existing projects from npm or Yarn to pnpm, plus upgrading pnpm v10 → v11.
+Guide for migrating existing projects from npm or Yarn to pnpm, plus upgrading pnpm v10 → v11 and v11 → v12.
+
+## Upgrading pnpm v11 → v12
+
+pnpm 12 is a **Rust rewrite** and is stable. It keeps v11's commands, flags, settings, and lockfile format — upgrading is not a migration. Only these differ (six change a result, one fails outright):
+
+- **`pnpm install --resolution-only` is removed** and errors. Use `pnpm peers check` (reads issues from the lockfile). Grep CI scripts for it before switching.
+- **Git dependency resolution:** GitHub/GitLab/Bitbucket specifiers resolve via the host's HTTPS URL and pnpm never records an SSH URL — one lockfile works with or without SSH keys. Run `pnpm update <pkg>` once to re-resolve an old `git@…` entry. For private SSH, use `git config --global url."git@github.com:".insteadOf https://github.com/`.
+- **Naming a package manager** installs the tool, not the npm package: `pnpm add -g yarn` installs Yarn (not the Classic `yarn` package), `pnx node@22` runs that Node.js release. A specifier like `yarn@npm:yarn@1.22.22` still installs the package.
+- **Project-aware global bins:** a global `node`/`deno`/`bun` runs the version the current project pins.
+- **`packageImportMethod: auto` hardlinks first on Linux** (was clone-first). Use `clone`/`clone-or-copy` if you edit files in `node_modules`.
+- **Cyclic dependency graphs** produce deterministic lockfiles; the first re-resolving install rewrites cyclic peer variants (one-time diff).
+- **`engineStrict`** now fails when a package depends through regular `dependencies` on an incompatible engine even under an `optionalDependencies` subtree.
+
+> `latest` on npm still points at the v11 line; install v12 from the `latest-12` tag until it graduates.
 
 ## Upgrading pnpm v10 → v11
 
