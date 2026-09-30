@@ -3,8 +3,10 @@ name: antfu
 description: Anthony Fu's opinionated tooling and conventions for JavaScript/TypeScript projects. Use when setting up new projects, configuring ESLint/Prettier alternatives, monorepos, library publishing, or when the user mentions Anthony Fu's preferences.
 metadata:
   author: Anthony Fu
-  version: "2026.06.22"
+  version: "2026.09.30"
 ---
+
+> Reference template: [antfu/starter-ts](https://github.com/antfu/starter-ts). When scaffolding a new TypeScript project, mirror its `package.json` scripts, `eslint.config.js`, `knip.json`, `tsdown.config.ts` and workflows rather than inventing a new layout.
 
 ## Coding Practices
 
@@ -100,30 +102,81 @@ Prefer this over `npm view <pkg> version` when you only need the latest version,
 ### ESLint Setup
 
 ```js
-// eslint.config.mjs
+// eslint.config.js
 import antfu from '@antfu/eslint-config'
 
-export default antfu()
+export default antfu({
+  type: 'lib', // or 'app' (default)
+  pnpm: true, // enforce pnpm catalogs in package.json
+  antislop: true, // flag redundant/duplicated AI-style code, ban explicit `any`
+})
 ```
 
-
-When completing tasks, run `pnpm run lint --fix` to format the code and fix coding style.
+Always enable `antislop: true`. It requires `eslint-plugin-slop` and `eslint-plugin-sonarjs` as dev dependencies.
 
 For detailed configuration options: [antfu-eslint-config](references/antfu-eslint-config.md)
 
-### Git Hooks
+### Knip
+
+Use [Knip](https://knip.dev) to catch unused files, exports and dependencies — the linter only sees one file at a time.
+
+```json
+// knip.json
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "project": ["src/**/*.ts"],
+  "ignoreDependencies": []
+}
+```
+
+Fix what Knip reports by deleting; only add to `ignoreDependencies` for tools invoked outside `package.json` scripts (e.g. `taze`).
+
+### Scripts and the `ci` Gate
+
+Every project exposes a `ci` script that runs all checks in one command:
 
 ```json
 {
-  "simple-git-hooks": {
-    "pre-commit": "pnpm i --frozen-lockfile --ignore-scripts --offline && npx lint-staged"
-  },
-  "lint-staged": { "*": "eslint --fix" },
   "scripts": {
-    "prepare": "npx simple-git-hooks"
+    "build": "tsdown",
+    "lint": "eslint --cache",
+    "typecheck": "tsc",
+    "knip": "knip",
+    "test": "pnpm run build && vitest",
+    "ci": "pnpm run lint && pnpm run typecheck && pnpm run knip && pnpm run test --run"
   }
 }
 ```
+
+**Before every commit, run `nr lint --fix` to format, then `nr ci` and make sure it passes.** Do not commit with a failing `ci`; fix the root cause instead of silencing rules or adding ignores.
+
+### Git Hooks
+
+`simple-git-hooks` + `nano-staged`. The pre-commit hook runs the full `ci` gate; `prepare` also installs agent skills via `skills-npm`:
+
+```json
+{
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks && simple-git-hooks && skills-npm"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm i --frozen-lockfile --ignore-scripts --offline && pnpm run ci && pnpx nano-staged"
+  },
+  "nano-staged": {
+    "*": "eslint --fix --no-warn-ignored"
+  }
+}
+```
+
+Add `.githooks` to `.gitignore` and `simple-git-hooks: true` under `allowBuilds` in `pnpm-workspace.yaml`.
+
+### skills-npm
+
+[`skills-npm`](https://github.com/antfu/skills-npm) symlinks agent skills shipped inside installed npm packages (and fetches those declared in a `skills` field) into the agent's skills directory on every install. Install as a dev dependency and wire it into `prepare` as above; add `skills/npm-*` to `.gitignore`. Commit the generated `skills-npm-lock.json`.
+
+### Publishing
+
+Prefer npm Trusted Publishing (OIDC) over `NPM_TOKEN` secrets: releases run on CI from a `v*` tag via `release.yml` with `id-token: write`, and `nr release` (`bumpp`) only bumps, tags and pushes. Details: [setting-up](references/setting-up.md#publishing-with-npm-trusted-publishing-oidc).
 
 ### pnpm Catalogs
 
@@ -144,8 +197,8 @@ Avoid the default catalog. Catalog names can be adjusted per project needs.
 
 | Topic | Description | Reference |
 |-------|-------------|-----------|
-| ESLint Config | Framework support, formatters, rule overrides, VS Code settings | [antfu-eslint-config](references/antfu-eslint-config.md) |
-| Project Setup | .gitignore, GitHub Actions, VS Code extensions | [setting-up](references/setting-up.md) |
+| ESLint Config | Framework support, antislop, formatters, rule overrides, VS Code settings | [antfu-eslint-config](references/antfu-eslint-config.md) |
+| Project Setup | .gitignore, GitHub Actions, OIDC trusted publishing, VS Code extensions | [setting-up](references/setting-up.md) |
 | App Development | Vue/Nuxt/UnoCSS conventions, auto-import control, Storybook component testing | [app-development](references/app-development.md) |
-| Library Development | tsdown bundling, pure ESM publishing | [library-development](references/library-development.md) |
+| Library Development | tsdown bundling, pure ESM publishing, publint, API snapshots | [library-development](references/library-development.md) |
 | Monorepo | pnpm workspaces, centralized alias, Turborepo | [monorepo](references/monorepo.md) |

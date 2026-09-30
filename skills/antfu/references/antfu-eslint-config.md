@@ -18,6 +18,12 @@ export default antfu({
   // Project type: 'lib' for libraries, 'app' (default) for applications
   type: 'lib',
 
+  // Enforce pnpm catalogs / workspace settings in package.json
+  pnpm: true,
+
+  // Always on: catch redundant, duplicated, AI-style code
+  antislop: true,
+
   // Global ignores (extends defaults, doesn't override)
   ignores: ['**/fixtures', '**/dist'],
 
@@ -36,6 +42,32 @@ export default antfu({
   yaml: false,
 })
 ```
+
+## Antislop
+
+```js
+export default antfu({
+  antislop: true,
+})
+// Requires: pnpm add -D eslint-plugin-slop eslint-plugin-sonarjs
+```
+
+Enables [`eslint-plugin-slop`](https://github.com/antfu/eslint-plugin-slop) plus a curated subset of `eslint-plugin-sonarjs` targeting redundant and duplicated code, and bans explicit `any` when TypeScript is enabled. Enable it on every project; when it flags code, simplify the code rather than disabling the rule.
+
+To toggle a plugin or scope inspection to recent changes:
+
+```js
+export default antfu({
+  antislop: {
+    sonarjs: false,
+    slop: {
+      inspection: { mode: 'recent-changes', tracebackCommits: 5 },
+    },
+  },
+})
+```
+
+Linters see one file at a time, so pair it with [Knip](https://knip.dev) for unused files/exports/dependencies (and `jscpd` for cross-file duplication when needed).
 
 ## Framework Support
 
@@ -230,23 +262,27 @@ export default antfu({
 })
 ```
 
-## Lint-Staged Setup
+## Pre-commit Setup
 
 ```json
 {
-  "simple-git-hooks": {
-    "pre-commit": "pnpm lint-staged"
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks && simple-git-hooks && skills-npm"
   },
-  "lint-staged": {
-    "*": "eslint --fix"
+  "simple-git-hooks": {
+    "pre-commit": "pnpm i --frozen-lockfile --ignore-scripts --offline && pnpm run ci && pnpx nano-staged"
+  },
+  "nano-staged": {
+    "*": "eslint --fix --no-warn-ignored"
   }
 }
 ```
 
 ```bash
-pnpm add -D lint-staged simple-git-hooks
-npx simple-git-hooks
+pnpm add -D nano-staged simple-git-hooks skills-npm
 ```
+
+The hook runs the full `ci` script (lint, typecheck, knip, tests) before auto-fixing staged files, so a commit never lands with a red check.
 
 ## VS Code Settings
 

@@ -11,6 +11,8 @@ description: Building and publishing TypeScript libraries with tsdown. Use when 
 | Output | Pure ESM only (no CJS) |
 | DTS | Generated via tsdown |
 | Exports | Auto-generated via tsdown |
+| Package validation | publint (via tsdown) |
+| Publishing | npm Trusted Publishing (OIDC) from CI |
 
 ## tsdown Configuration
 
@@ -25,6 +27,7 @@ export default defineConfig({
   format: ['esm'],
   dts: true,
   exports: true,
+  publint: true,
 })
 ```
 
@@ -33,6 +36,7 @@ export default defineConfig({
 | `format` | `['esm']` | Pure ESM, no CommonJS |
 | `dts` | `true` | Generate `.d.ts` files |
 | `exports` | `true` | Auto-update `exports` field in `package.json` |
+| `publint` | `true` | Validate `package.json`/`exports` on every build (requires `publint` dev dependency) |
 
 ### Multiple Entry Points
 
@@ -129,21 +133,29 @@ Required fields for pure ESM library:
 ```json
 {
   "type": "module",
-  "main": "./dist/index.mjs",
-  "module": "./dist/index.mjs",
+  "sideEffects": false,
   "types": "./dist/index.d.mts",
   "files": ["dist"],
   "scripts": {
     "build": "tsdown",
-    "prepack": "pnpm build",
-    "test": "vitest",
-    "release": "bumpp -r"
+    "dev": "tsdown --watch",
+    "lint": "eslint --cache",
+    "typecheck": "tsc",
+    "knip": "knip",
+    "test": "pnpm run build && vitest",
+    "ci": "pnpm run lint && pnpm run typecheck && pnpm run knip && pnpm run test --run",
+    "prepack": "nr build",
+    "release": "bumpp"
   }
 }
 ```
 
-The `exports` field is managed by tsdown when `exports: true`.
+The `exports` field is managed by tsdown when `exports: true`. Use `bumpp -r` in monorepos.
 
 ### prepack Script
 
-For each public package, add `"prepack": "pnpm build"` to `scripts`. This ensures the package is automatically built before publishing (e.g., when running `npm publish` or `pnpm publish`). This prevents accidentally publishing stale or missing build artifacts.
+For each public package, add `"prepack": "nr build"` to `scripts`. This ensures the package is automatically built before publishing (e.g., when running `npm publish` or `pnpm publish`). This prevents accidentally publishing stale or missing build artifacts.
+
+### Releasing
+
+Run `nr ci` first — it must pass. Then `nr release`: `bumpp` bumps the version, commits, tags and pushes. The `v*` tag triggers `release.yml`, which builds and publishes via npm Trusted Publishing (OIDC). Do not publish from a local machine after the initial package creation; see [setting-up](setting-up.md#publishing-with-npm-trusted-publishing-oidc).
