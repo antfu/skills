@@ -90,21 +90,6 @@ Risk groups to scan: input validation and auth; failure mapping, retries, duplic
 
 Write `Not verified` instead of turning a risk question into a claim.
 
-## Verification
-
-Exact commands and outcomes. Keep evidence types separate: focused tests, static checks, CI, manual runtime checks.
-
-```markdown
-## Verification
-
-- `pnpm vitest run packages/upload` - 42 passed
-- `pnpm typecheck` - clean
-- `pnpm lint` - clean
-- Manual: uploaded a 12MB file via `cli upload big.bin`, got asset URL
-
-Not verified: behavior against the production CDN (no staging access).
-```
-
 ## Visual changes
 
 Only for user-visible UI changes. Image row first, label row second. See [visual-evidence](visual-evidence.md) for capture and attachment.
