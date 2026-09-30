@@ -18,6 +18,5 @@ export const submodules = {
  */
 export const manual = [
   'antfu',
-  'antfu-design',
   'antfu-create-pr',
 ]
