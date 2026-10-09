@@ -22,8 +22,9 @@ conventions:
 - **upload-github-attachment**
   https://github.com/moeru-ai/airi/blob/main/.agents/skills/upload-github-attachment/SKILL.md
   Uploading PR-only screenshots to GitHub user-attachments instead of committing them.
-  This skill uses the native `gh --attach` flag (GitHub CLI 2.99+) and keeps the airi
-  script as the fallback for older CLIs.
+  This skill uses the native `gh --attach` flag (GitHub CLI 2.99+); the bundled
+  `scripts/upload-github-attachment.sh` fallback for older CLIs is adapted from the
+  version in https://github.com/antfu/pulls.review/pull/76.
 
 These upstream projects are maintained by their own authors under their own licenses.
 Before redistributing, check each repository's license and attribution terms.

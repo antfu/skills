@@ -22,6 +22,7 @@ Every PR that changes what a user sees ships a before/after pair per affected st
 5. Use identical viewport, theme, locale, fixture data, and readiness condition for both revisions. Write outputs to an ignored directory such as `.pr-shots/base/<id>.png` and `.pr-shots/head/<id>.png`.
 6. Look at every image. Reject blank, loading, error, or unstable captures unless that state is the subject of the change. A failed capture blocks the PR; record the reason instead of dropping the state.
 7. Record `before: absent` for a newly added state and `after: removed` for a deleted one.
+8. Run the exact same capture command for both revisions. When the setup is not obvious from the images, add the command and a short manifest (`id`, `title`, `viewport`, `before` / `after` revisions) under the `## Visual changes` table so a reviewer can reproduce it.
 
 Remove the temporary worktree after the PR is created: `git worktree remove /tmp/pr-base`.
 
@@ -55,11 +56,22 @@ After creating the PR, open it and confirm every image renders and matches its l
 
 ## Fallback
 
-On an older `gh`, upload each file to `https://uploads.github.com/user-attachments/assets` with the `gh auth token` bearer token and paste the returned `https://github.com/user-attachments/assets/...` URL into the body. The airi `upload-github-attachment` script wraps this flow. If neither route works, stop and report the local paths instead of committing images.
+On a `gh` without `--attach`, upload each file with the bundled script and paste the returned URL into the body:
+
+```bash
+url=$(scripts/upload-github-attachment.sh .pr-shots/head/settings-connection.png)
+# -> https://github.com/user-attachments/assets/...
+```
+
+- Pass `--repo OWNER/REPO` when the current directory does not resolve to the target repository.
+- Auth comes from `gh auth token`, or `GH_TOKEN` / `GITHUB_TOKEN` when no interactive session exists. The script never prints the token.
+- The upload endpoint is undocumented. Treat a rejected upload as blocking: stop and report the local paths instead of committing images.
 
 <!--
 Source references:
 - https://docs.github.com/en/github-cli/github-cli/attaching-files-with-github-cli
 - https://github.com/moeru-ai/airi/blob/main/.agents/skills/create-pr/SKILL.md
 - https://github.com/moeru-ai/airi/blob/main/.agents/skills/upload-github-attachment/SKILL.md
+- https://github.com/antfu/pulls.review/pull/76
+- https://island94.org/2026/08/programmatically-upload-attachments-to-github-issues-pull-requests-comments
 -->
