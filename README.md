@@ -1,12 +1,25 @@
 # Anthony Fu's Skills
 
-A curated collection of [Agent Skills](https://agentskills.io/home) reflecting [Anthony Fu](https://github.com/antfu)'s preferences, experience, and best practices, along with usage documentation for the tools.
+A collection of [Agent Skills](https://agentskills.io/home) reflecting [Anthony Fu](https://github.com/antfu)'s preferences, experience, and best practices, along with usage documentation for the tools.
 
 > [!IMPORTANT]
 > This is a proof-of-concept project for generating agent skills from source documentation and keeping them in sync.
 > I haven't fully tested how well the skills perform in practice, so feedback and contributions are greatly welcome.
 
 ## Installation
+
+This repo mainly hosts the skills. The recommended way to use them is [`@antfu/skills`](https://github.com/antfu/skills-pack), a skills pack installed with [skills-npm](https://github.com/antfu/skills-npm). Besides my own skills, the pack includes curated skills from other authors, and your package manager keeps them in sync:
+
+```bash
+pnpm i -D skills-npm @antfu/skills
+pnpx skills-npm setup
+```
+
+See [antfu/skills-pack](https://github.com/antfu/skills-pack) for the full list of skills in the pack.
+
+### Install From This Repo
+
+To install skills from this repo directly, use the [skills](https://github.com/vercel-labs/skills) CLI:
 
 ```bash
 pnpx skills add antfu/skills --skill='*'
@@ -18,11 +31,9 @@ or to install all of them globally:
 pnpx skills add antfu/skills --skill='*' -g
 ```
 
-Learn more about the CLI usage at [skills](https://github.com/vercel-labs/skills).
-
 ## Skills
 
-This collection is aim to be a one-stop collection of you are mainly working on Vite/Nuxt. It includes skills from different sources with different scopes.
+This repo includes skills from different sources with different scopes.
 
 ### Hand-maintained Skills
 
@@ -59,7 +70,7 @@ Generated from official documentation and fine-tuned by Anthony.
 
 ### What Makes This Collection Different?
 
-This collection is opinionated, but the key difference is that it uses git submodules to directly reference source documentation. This provides more reliable context and allows the skills to stay up-to-date with upstream changes over time. If you primarily work with Vue/Vite/Nuxt, this aims to be a comprehensive one-stop collection.
+This collection is opinionated, but the key difference is that it uses git submodules to directly reference source documentation. This provides more reliable context and allows the skills to stay up-to-date with upstream changes over time.
 
 The project is also designed to be flexible - you can use it as a template to generate your own skills collection.
 
