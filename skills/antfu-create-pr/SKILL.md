@@ -3,7 +3,7 @@ name: antfu-create-pr
 description: Create a reviewable GitHub pull request from the current branch with a Conventional Commits title, a concise evidence-based body, and before/after screenshots for UI changes. Use when asked to open, create, publish, or prepare a PR.
 metadata:
   author: Anthony Fu
-  version: "2026.09.30"
+  version: "2026.10.09"
 ---
 
 # Create Pull Request
@@ -18,9 +18,10 @@ Open a PR that a reviewer can understand from the body alone. Explain the change
 4. Classify the PR (feature, fix, refactor, chore, docs) and decide which optional body sections earn their place. See [pr-body](references/pr-body.md).
 5. Run the checks that match the changed surfaces (focused tests, typecheck, lint). Record the exact commands and results.
 6. If the diff changes user-visible UI, capture before/after evidence. See [visual-evidence](references/visual-evidence.md).
-7. Write the body to a temporary file. Push the branch. Create the PR with `gh pr create --title ... --body-file ...` (add `--attach` for each screenshot). Use `--draft` when checks are still running or the work is not review-ready.
-8. Open the created PR and verify title, base, head, rendered tables, diagrams, and images.
-9. Address review comments: fix each confirmed issue, run focused checks, push, reply with evidence, and resolve the thread.
+7. Review the commit history and reshape it into atomic Conventional Commits. See [Commits](#commits).
+8. Write the body to a temporary file. Push the branch. Create the PR with `gh pr create --title ... --body-file ...` (add `--attach` for each screenshot). Use `--draft` when checks are still running or the work is not review-ready.
+9. Open the created PR and verify title, base, head, rendered tables, diagrams, and images.
+10. Address review comments: fix each confirmed issue, run focused checks, push, reply with evidence, and resolve the thread.
 
 ## Title
 
@@ -37,6 +38,25 @@ docs: clarify worktree setup
 - Lowercase, imperative, no trailing period, under ~70 characters.
 - Scope is the package, module, or feature name the repo already uses. Omit it when the change is repo-wide.
 - Squash-merge repos turn the title into the commit message; write it as the commit you want in history.
+
+## Commits
+
+Each commit does one logical thing and uses a Conventional Commits message. A reviewer should be able to read `git log --oneline` as the story of the change and review commit by commit.
+
+```text
+# Good: each commit is self-contained
+feat(api): add task creation endpoint with validation
+feat(ui): add task creation form component
+feat(ui): connect form to api and add loading state
+test(tasks): cover task creation (unit + integration)
+
+# Bad: everything mixed together
+feat: add task feature, fix sidebar, update deps, refactor utils
+```
+
+- Keep unrelated fixes, dependency bumps, and drive-by refactors out of the branch; open separate PRs for them.
+- Before pushing, review the history and split or squash local commits (`git rebase -i <base>`) until each one stands alone and builds.
+- Do not rewrite commits that are already pushed and under review; add new commits instead.
 
 ## Body
 
