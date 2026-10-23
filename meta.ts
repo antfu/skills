@@ -19,4 +19,5 @@ export const submodules = {
 export const manual = [
   'antfu',
   'antfu-create-pr',
+  'antfu-issue-triage',
 ]
