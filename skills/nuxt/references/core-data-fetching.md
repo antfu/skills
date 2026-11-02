@@ -168,11 +168,14 @@ export const useAPI = createUseFetch(callerOptions => ({
 ```ts
 // app/composables/useCachedData.ts
 export const useCachedData = createUseAsyncData({
-  getCachedData(key, nuxtApp) {
+  getCachedData(key, nuxtApp, { cause }) {
+    if (cause === 'refresh:manual' || cause === 'refresh:hook') return undefined
     return nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
   },
 })
 ```
+
+This example bypasses cached entries on manual and hook refreshes. Define an expiry or invalidation policy if cached data should also become stale during navigation or watches. Return `undefined` to run the handler.
 
 > Replaces the old "don't await your custom `useFetch` wrapper" caveat — use these factories instead of hand-rolled wrappers.
 
