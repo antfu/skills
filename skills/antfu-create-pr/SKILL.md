@@ -3,7 +3,7 @@ name: antfu-create-pr
 description: Create a reviewable GitHub pull request from the current branch with a Conventional Commits title, a concise evidence-based body, and before/after screenshots for UI changes. Use when asked to open, create, publish, or prepare a PR.
 metadata:
   author: Anthony Fu
-  version: "2026.10.09"
+  version: "2026.11.05"
 ---
 
 # Create Pull Request
@@ -64,7 +64,7 @@ Required in every PR:
 
 - `## Summary`: the problem or capability first, then what changed and why this approach. Mention if the PR is stacked and on what.
 - Linked issues: `closes #123` / `fixes #123` / `refs #123` so GitHub links and auto-closes.
-- `## Verification`: exact commands run and their results, plus anything left unverified.
+- `## Verification`: exact commands run and their results, plus anything left unverified. Show proof matched to the change type (bug: same input before and after; perf: same workload measured both sides; CLI: real output). See [Evidence by change type](references/pr-body.md#evidence-by-change-type).
 
 Optional, only when it helps the reviewer:
 
@@ -85,4 +85,11 @@ If the repo has a PR template, keep its headings and fill them; add sections abo
 - No filler ("This PR aims to...", "comprehensive", "robust"). Start sentences with the fact.
 - Do not paste tokens, secrets, user records, or full payloads into the body.
 - Do not commit screenshots or other PR-only artifacts to the repo; attach them with `gh --attach` (supported by newer `gh`, no manual upload needed).
-- If the PR was written with the help of an agent, say so in one line at the end of the body.
+- A description conveys belief, not proof. Show the change working instead of only saying it works.
+- "Before" is what is live (base branch or production), never a faked revert. Check every capture; agents can screenshot the wrong page. Use demo or sanitized data only.
+- Security fixes: keep the description short and delay exploit details until release.
+- If the PR was written with the help of an agent, say so in one line at the end of the body: what the human contributed (gave the task, wrote the spec, shaped the solution) and whether they have reviewed the diff yet. If not, the reviewer is the first human to look.
+
+## Credits
+
+Evidence-by-type, honesty rules, and review-status disclosure are adapted from Hugo Richard's [What my pull requests look like now](https://hugorcd.com/writing/what-my-pull-requests-look-like-now).
