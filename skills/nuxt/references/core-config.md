@@ -161,8 +161,16 @@ Nuxt uses `nuxt.config.ts` as single source of truth. Configure external tools w
 export default defineNuxtConfig({
   // Nitro configuration
   nitro: {
-    // nitro options
+    // nitro options (storage mounts are `nitro.kv` + `useKV()`; `nitro.storage`/`useStorage()` are deprecated)
   },
+  // Prerendering applies to any server builder; Nitro-only options (concurrency, failOnError) stay in `nitro.prerender`
+  prerender: {
+    routes: ['/user/1', '/user/2'],
+    ignore: ['/dynamic'],
+    crawlLinks: true,
+  },
+  // Client bundler: 'vite' (default) | 'webpack' | 'rsbuild' (`rspack` is deprecated, use rsbuild + `rsbuild: {}` options)
+  // builder: 'rsbuild',
   // Vite configuration
   vite: {
     // vite options
@@ -188,11 +196,13 @@ export default defineNuxtConfig({
       build: { rollupOptions: { output: { manualChunks: { analytics: ['analytics-package'] } } } },
     },
     $server: {
-      build: { sourcemap: 'inline' },
+      build: { sourcemap: 'inline' }, // `sourcemap` also accepts 'hidden' | 'nosource' at the top level
     },
   },
 })
 ```
+
+Vite 8 / Rolldown: `vite.esbuild` and `vite.optimizeDeps.esbuildOptions` are deprecated for `vite.oxc` and `vite.optimizeDeps.rolldownOptions`; `build.rollupOptions` for `build.rolldownOptions`. A Nitro rollup plugin that must run before Vite's resolution needs to be a Vite plugin with `enforce: 'pre'` (scope server-only plugins with `applyToEnvironment: env => env.name === 'nitro'`).
 
 ## Vue Configuration
 
@@ -223,6 +233,11 @@ Many former experimental flags are now on by default. Each can be reverted via t
 | Client-only SSR placeholder is a comment node, not `<div>` | on | `experimental.clientNodePlaceholder: false` |
 | Reuse builder's file watcher | `experimental.watcher: 'builder'` | `watcher: 'chokidar'` |
 | Server auto-imports (Nitro helpers) | off | `experimental.nitroAutoImports: true` |
+| Error format: page errors return the HTML error page, server route errors return JSON (request headers no longer matter) | `experimental.inlineErrorRendering` on | `experimental.inlineErrorRendering: false` |
+| `$fetch` is not set on `globalThis` in the browser (import from `#build/fetch`) | on | provide your own instance via a plugin (`provide: { api: $fetch.create(...) }`) |
+| `routeRules` keys use URLPattern: `*` matches nested paths, one `*`/`**` per key, regex constraints cannot match encoded chars | on | use named params (`/blog/:slug`) |
+| `server/utils/` subdirectories not auto-imported (warns `NUXT_B9006`) | on | re-export from a top-level file, or `nitroLegacy.imports` |
+| h3 v1 / `nitropack` imports in your `server/` dir | not supported (`NUXT_B9005` lists them) | `nitroLegacy: true` (or per-switch object) while migrating |
 | `error.data` parsed (never stringified) | forced on | — (`parseErrorData` no longer configurable) |
 | Vue Options API compiled out of client bundle | on | `vue: { optionsApi: true }` |
 | `noUncheckedSideEffectImports` in generated tsconfig | on | `typescript.tsConfig.compilerOptions.noUncheckedSideEffectImports: false` |
@@ -232,6 +247,8 @@ Many former experimental flags are now on by default. Each can be reverted via t
 `unhead.legacy` is ignored (setting it warns); Capo title sorting is always on.
 
 ## Other Experimental Flags
+
+On by default (disable with `false`): `serverPathFallback` (client navigation to a path matching no page, e.g. `<NuxtLink to="/rss.xml">`, loads as a full document so public files/server routes respond), `templateDiagnostics` (build warnings `NUXT_B4025` for `<NuxtLink to>` matching no route, `B3014` `v-on`/`v-model` on server components, `B3015` function/class props to server components or `<NuxtIsland>`), `deferPrefetchHints` (prefetch hints rendered as `data-href`, activated by `onNuxtReady`), `compileHints` (V8 compile hint on entry/layout/page chunks, Vite prod builds), `compilerComponentResolution` (auto-imported components resolved in the Vue compiler).
 
 Notable opt-in flags under `experimental` (see source for the full list):
 
@@ -262,4 +279,8 @@ Source references:
 - https://nuxt.com/docs/guide/going-further/runtime-config
 - https://nuxt.com/docs/api/nuxt-config
 - https://nuxt.com/docs/guide/going-further/experimental-features
+- https://nuxt.com/docs/getting-started/prerendering
+- https://nuxt.com/docs/errors/b4025
+- https://nuxt.com/docs/errors/b3014
+- https://nuxt.com/docs/errors/b3015
 -->

@@ -12,7 +12,7 @@ Nuxt provides composables for SSR-friendly data fetching that prevent double-fet
 - `$fetch` - Basic fetch utility (use for client-side events)
 - `useFetch` - SSR-safe wrapper around $fetch (use for component data)
 - `useAsyncData` - SSR-safe wrapper for any async function
-- `createUseFetch` / `createUseAsyncData` - factories to build typed custom composables with baked-in defaults
+- `createUseFetch` / `createUseAsyncData` - factories (support `addons`) to build typed custom composables with baked-in defaults
 
 ### On `await`
 
@@ -173,6 +173,28 @@ export const useCachedData = createUseAsyncData({
   },
 })
 ```
+
+### Addons
+
+Both factories accept `addons: [...]` built with `defineUseFetchAddon` / `defineUseAsyncDataAddon` (v4.6+). `setup(options)` runs before the call (declare custom typed call-site options via `UseFetchAddonOptions<{ ... }>` / `UseAsyncDataAddonOptions<{ ... }>`, may push to `options.onRequest`), and may return `(asyncData) => ext | void` that runs after, to attach watchers/cleanup and extend the returned object. Addons run in array order (first is the outermost middleware); duplicates run once.
+
+```ts
+const polling = defineUseAsyncDataAddon({
+  setup: (options: UseAsyncDataAddonOptions<{ pollEvery?: number }>) => {
+    if (import.meta.server || !options.pollEvery) { return }
+    return (asyncData) => {
+      const id = setInterval(() => asyncData.refresh(), options.pollEvery)
+      onScopeDispose(() => clearInterval(id))
+    }
+  },
+})
+export const usePolledAsyncData = createUseAsyncData({ addons: [polling] })
+// await usePolledAsyncData('key', () => $fetch('/api/x'), { pollEvery: 30_000 })
+```
+
+`useAsyncData`/`useFetch` also take a `middleware: AsyncDataMiddleware[]` option (v4.6+): `(next, { signal }) => Promise` functions wrapping the handler; must be consistent across calls sharing a key.
+
+Related: `onNuxtReady(cb, { timeout, signal })` runs a client-only callback when the app is ready and the browser idle (`timeout` caps the idle wait, `signal` skips it if aborted).
 
 > Replaces the old "don't await your custom `useFetch` wrapper" caveat — use these factories instead of hand-rolled wrappers.
 
@@ -350,4 +372,7 @@ Source references:
 - https://nuxt.com/docs/api/composables/create-use-fetch
 - https://nuxt.com/docs/api/composables/create-use-async-data
 - https://nuxt.com/docs/guide/recipes/custom-usefetch
+- https://nuxt.com/docs/api/utils/define-use-fetch-addon
+- https://nuxt.com/docs/api/utils/define-use-async-data-addon
+- https://nuxt.com/docs/api/utils/on-nuxt-ready
 -->

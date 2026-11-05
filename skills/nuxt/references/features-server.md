@@ -25,7 +25,11 @@ export default defineEventHandler((event) => {
 - Server code should import shared Nuxt composables from `#imports/server` (not `#imports`).
 - Re-enable Nitro auto-imports while migrating: `experimental.nitroAutoImports: true`.
 - `defineEventHandler` preserves your handler's return type — this is what types `$fetch`/`useFetch` calls to the route. Annotate the returned value, not the handler.
-- Helpers not in the `nuxt/server` surface (e.g. `readMultipartFormData`, `lazyEventHandler`, `useStorage`, `defineCachedHandler`) still come from `nitro/h3`, `nitro/storage`, `nitro/cache`, etc.
+- Helpers not in the `nuxt/server` surface (e.g. `readMultipartFormData`, `lazyEventHandler`, `useKV`, `defineCachedHandler`, `defineTask`) still come from `nitro/h3`, `nitro/kv`, `nitro/cache`, `nitro/task`, etc.
+- Also in `nuxt/server`: `getRequestHost`/`getRequestProtocol` (pass `{ xForwardedHost: true, xForwardedProto: true }` only behind a trusted proxy), `parseCookies`, `matchRouteRules` (rules for another path), `serverFetch(event, path)` (in-process fetch of an app route; forwards `cookie`/`authorization`), and `useServerHooks()` (renderer hooks like `render:html`). `toNuxtRequestEvent` was removed.
+- A handler file must default-export `defineEventHandler` from `nuxt/server` (not h3's). It may return JSON-serializable data, a `Response`, or a `ReadableStream`. For a handler needing the runtime's own event (`proxyRequest`, `event.waitUntil()`, ...), import `defineEventHandler` from `nitro/h3` instead (Nitro v3 only, register as `nitro3`).
+- Only files directly in `server/utils/` are auto-imported; re-export from a top-level file for subdirectory helpers.
+- Don't import `nuxt/server` in Nuxt-process code (`nuxt.config.ts`, module `setup`, dev server handlers): runtime/app config come back empty. Read `nuxt.options` there.
 
 ## API Routes
 
@@ -296,17 +300,21 @@ export default defineEventHandler((event) => {
 })
 ```
 
+## Nitro Builder
+
+Nitro bundles the server with Rolldown by default. With the webpack/Rspack app builder, pick another via `nitro.builder` (or `NITRO_BUILDER`), e.g. `builder: 'rspack', nitro: { builder: 'rspack' }`. The Nitro `rspack` and `bun` builders are experimental; with `experimental.nitroViteEnvironment`, Vite builds the server and `nitro.builder` is ignored.
+
 ## Server Storage
 
-Key-value storage with multiple drivers. In Nitro v3, `useStorage` comes from `nitro/storage`:
+Key-value storage with multiple drivers. In Nitro v3 it is the KV layer: `useKV` comes from `nitro/kv` (was `useStorage`) and mounts are configured with `nitro.kv` (was `nitro.storage`):
 
 ```ts
 // server/api/cache.ts
 import { defineEventHandler } from 'nuxt/server'
-import { useStorage } from 'nitro/storage'
+import { useKV } from 'nitro/kv'
 
 export default defineEventHandler(async (event) => {
-  const storage = useStorage()
+  const storage = useKV()
 
   // Set value
   await storage.setItem('key', { data: 'value' })
@@ -318,12 +326,12 @@ export default defineEventHandler(async (event) => {
 })
 ```
 
-Configure storage drivers in `nuxt.config.ts`:
+Configure KV drivers in `nuxt.config.ts`:
 
 ```ts
 export default defineNuxtConfig({
   nitro: {
-    storage: {
+    kv: {
       redis: {
         driver: 'redis',
         url: 'redis://localhost:6379',
@@ -339,5 +347,6 @@ Source references:
 - https://nuxt.com/docs/directory-structure/server
 - https://nuxt.com/docs/guide/going-further/server-imports
 - https://nuxt.com/docs/getting-started/upgrade#migration-to-nitro-v3
+- https://nuxt.com/docs/guide/modules/server-compatibility
 - https://nitro.build/blog/v3-beta
 -->

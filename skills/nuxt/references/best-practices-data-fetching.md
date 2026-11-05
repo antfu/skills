@@ -354,6 +354,8 @@ const { data: profile } = await useAPI('/me') // auth + 401 handling baked in
 </script>
 ```
 
+To add reusable behavior (polling, refresh on focus, extra options or return values), pass `addons` built with `defineUseFetchAddon` / `defineUseAsyncDataAddon` to the factory (v4.6+); see core-data-fetching.
+
 For lower-level control, create a custom `$fetch` instance in a plugin and wrap it with `useAsyncData` (or pass it to `createUseFetch`) — this avoids double fetching during SSR:
 
 ```ts

@@ -289,6 +289,11 @@ export default definePlugin((nitroApp) => {
   })
   ```
 
+- **Dev server handlers:** `addDevServerHandler` takes the same variant keys (`handler: { nuxt, nitro2, nitro3 }`), plus `method`, `middleware`, `meta`. They run in the Nuxt process, so write `nuxt` as `event => fn(event.req)` against web `Request`/`Response` and never import `nuxt/server` there; `nitro2` uses h3 v1 with `toWebRequest(event)` (add `h3@^1` to dependencies). The object form needs `@nuxt/kit@^4.6` in `dependencies`. Routes: `nuxt`/`nitro3` match exactly, `nitro2` matches as a prefix; end the route in `/**` to match subpaths on all (`@nuxt/kit@^4.6.1`). A `nitro2` handler sees `event.path` relative to its route base.
+- **Other variants:** `resolveServerVariant({ nuxt, nitro2 })` resolves the right file for aliases/type templates (or `undefined`); `addServerImports({ from: { nuxt, nitro2 } })` accepts variants. `nitro3` files may import `nitro/*` alone or alongside `nuxt/server`.
+- **Detection:** Nuxt infers the API from imports of registered files and their imports (`import type` ignored); override with `meta.compatibility.server`. Undetectable code is treated as `nitro2`. With `nitropack` v2 or `nitro` v3 hosts the `nitro2`/`nitro3` variant is preferred over `nuxt`; to test the `nuxt` variant set `server.builder` to a non-Nitro builder (e.g. `@nuxt/vite-server`).
+- **Server utilities** taking the event should type it as `RequestEvent` from `nuxt/server` (or `Pick<RequestEvent, 'req' | 'context'>`), not `H3Event`. Type module runtime config by augmenting `RuntimeConfig`/`PublicRuntimeConfig` from `nuxt/schema`.
+- **Plugins, storage, caching, tasks** have no `nuxt` variant: register as `nitro2` now, add `nitro3` when porting (`useKV` from `nitro/kv`, `defineTask` from `nitro/task`). In Nitro v3, `globalThis.$fetch` is gone: use `serverFetch(event, path)` from `nuxt/server`.
 - Declare all real dependencies in `package.json` — Nitro v3 no longer hoists `nitropack` v2's own deps into the server bundle.
 
 ## Templates and Virtual Files
@@ -305,6 +310,7 @@ export default defineNuxtModule({
     // Client/build virtual file (accessible via #build/my-config.mjs)
     addTemplate({
       filename: 'my-config.mjs',
+      dependsOn: [], // optional: skip dev regeneration on file edits; only if output doesn't read watched file contents
       getContents: () => `export default ${JSON.stringify(options)}`,
     })
 
@@ -459,6 +465,11 @@ export default defineNuxtModule({
       apiUrl: options.apiUrl,
     }
 
+    // Or use kit utilities: extendViteConfig, extendWebpackConfig, extendRsbuildConfig(config => ...)
+    // Plugins: addVitePlugin, addWebpackPlugin, addRsbuildPlugin, or addBuildPlugin({ vite, webpack, rsbuild, rspack })
+    // addVitePlugin targets the app environments (client/ssr), never `nitro`; for the nitro Vite
+    // environment push to nuxt.options.vite.plugins with applyToEnvironment: e => e.name === 'nitro'
+
     // Extend Vite config
     nuxt.options.vite.optimizeDeps ||= {}
     nuxt.options.vite.optimizeDeps.include ||= []
@@ -606,4 +617,6 @@ Source references:
 - https://nuxt.com/docs/guide/modules/recipes-basics
 - https://nuxt.com/docs/guide/modules/module-dependencies
 - https://nuxt.com/docs/guide/modules/server-compatibility
+- https://nuxt.com/docs/guide/modules/recipes-advanced
+- https://nuxt.com/docs/api/kit/builder
 -->

@@ -218,7 +218,11 @@ server/
     └── db.ts            → Auto-imported server utilities
 ```
 
-**Nuxt 5 server imports:** Nitro/h3 helpers (`defineEventHandler`, `getQuery`, `createError`…) are **no longer auto-imported by default** — import them from `nuxt/server`. Your own `server/utils/` and `server/types/` exports are still auto-imported. Inside server code, import shared Nuxt composables from `#imports/server` (not `#imports`). Re-enable Nitro auto-imports with `experimental.nitroAutoImports: true`.
+**Nuxt 5 server imports:** Nitro/h3 helpers (`defineEventHandler`, `getQuery`, `createError`…) are **no longer auto-imported by default** — import them from `nuxt/server`. Your own `server/utils/` and `server/types/` exports are still auto-imported, but only files directly in `server/utils/` (nested ones warn `NUXT_B9006`; re-export them from a top-level file). Handlers must default-export `defineEventHandler` from `nuxt/server` and can return JSON values, a `Response`, or a `ReadableStream` (no `sendStream`). Server KV storage is `useKV()` with `nitro.kv` (was `useStorage()`/`nitro.storage`). File names in `server/` cannot contain unknown dotted suffixes (`hello.world.ts` fails; add to `nitro.scanSuffixes`). Inside server code, import shared Nuxt composables from `#imports/server` (not `#imports`). Re-enable Nitro auto-imports with `experimental.nitroAutoImports: true`.
+
+### `app/spa-loading-template.html`
+
+Plain HTML (no Vue, no auto-imports; inline its own `<style>`) inserted into the server response for `ssr: false` pages, shown until the first page is ready, in a `<div id="__nuxt-loader">` sibling of `#__nuxt` (customize with `app.spaLoaderTag`/`app.spaLoaderAttrs`, keep the `id`). Config: `spaLoadingTemplate: 'my-loader.html'` (path relative to `srcDir`) | `true` (built-in screen) | `false`. `experimental.spaLoadingTemplateLocation: 'within'` renders it inside `#__nuxt`, removed as soon as Vue mounts. For route transitions use `<NuxtLoadingIndicator>`.
 
 ### `shared/` Directory
 
@@ -306,6 +310,7 @@ Source references:
 - https://nuxt.com/docs/directory-structure/app
 - https://nuxt.com/docs/directory-structure/server
 - https://nuxt.com/docs/directory-structure/shared
+- https://nuxt.com/docs/directory-structure/app/spa-loading-template
 - https://nuxt.com/docs/guide/going-further/server-imports
 - https://nuxt.com/docs/api/nuxt-config#alias
 -->
