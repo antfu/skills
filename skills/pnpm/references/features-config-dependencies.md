@@ -9,11 +9,11 @@ Config dependencies are npm packages that pnpm installs **before** all regular d
 
 ## Declaring config dependencies
 
-They live in `pnpm-workspace.yaml`; their integrity is recorded in a dedicated env-lockfile document inside `pnpm-lock.yaml`.
+They live in `pnpm-workspace.yaml`; their integrity is recorded in a dedicated boot document inside `pnpm-lock.yaml`. They install to `node_modules/.pnpm-config/<name>`.
 
 ```yaml title="pnpm-workspace.yaml"
 configDependencies:
-  my-configs: "1.0.0"
+  my-configs: "^1.0.0"
 ```
 
 Add one with the `--config` flag:
@@ -23,11 +23,21 @@ pnpm add --config my-configs
 pnpm add --config @myorg/pnpm-plugin-my-catalogs
 ```
 
+Since v12.12 the saved range follows `pnpm add` rules (`savePrefix`, `--save-exact`); a dist-tag is saved as a range on the resolved version. Remove one by deleting it from `configDependencies` and running `pnpm install` (without `--frozen-lockfile`).
+
+## Updating
+
+Since v12.12, `pnpm update` updates config dependencies like regular ones: `pnpm update` (newest within range, rewrites range in `pnpm-workspace.yaml`), `--latest`, or by name/pattern (`pnpm update my-configs`). Dist-tag declarations keep tracking the tag (only the lockfile moves). Skipped with `--interactive`, `--patches`, `--no-save`, `--filter`, dep-group flags (`--prod`), and when pinned with `version+integrity`.
+
+## Registry and security
+
+Must come from an npm registry and are verified against it before install (offline install of new/changed ones needs cached metadata). `minimumReleaseAge` applies unless pinned with `version+integrity`; they install before `updateConfig` runs, so `minimumReleaseAgeExclude` added by a hook does not cover them. Since v12.15, `bootConfig` sets a separate policy for installing them. A config dependency can also supply settings declaratively without a pnpmfile (see config-includes in `core-config`).
+
 ## Constraints
 
 - **No regular `dependencies`.** They may declare `optionalDependencies`, but only one level deep.
 - **No lifecycle scripts** (`preinstall`, `postinstall`, …).
-- `optionalDependencies` (used for platform-specific binaries, esbuild-style) must use **exact** versions — ranges/tags are rejected, keeping installs reproducible.
+- `optionalDependencies` (used for platform-specific binaries, esbuild-style) must use **exact** versions — ranges/tags fail with `ERR_PNPM_CONFIG_DEP_OPTIONAL_NOT_EXACT`, keeping installs reproducible.
 
 ## Auto-loaded plugins
 
@@ -40,7 +50,7 @@ A config dependency named `pnpm-plugin-*`, `@*/pnpm-plugin-*`, or `@pnpm/plugin-
 Because config deps install before the pnpmfile loads, you can import from them:
 
 ```js title=".pnpmfile.mjs"
-import { readPackage } from '.pnpm-config/my-hooks'
+import { readPackage } from './node_modules/.pnpm-config/my-hooks/index.mjs'
 
 export const hooks = { readPackage }
 ```

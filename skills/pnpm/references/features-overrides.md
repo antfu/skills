@@ -88,9 +88,39 @@ overrides:
   "react-dom>react": "18.1.0"
 ```
 
-- Semver ranges, `workspace:`, and `catalog:` keep the entry as a peer dependency.
-- Non-range specifiers (`link:`, `file:`) move it into `dependencies`.
-- `-` removes the peer dependency entirely.
+Without a selector, an override applies to `dependencies`, `devDependencies`, `optionalDependencies`, and `peerDependencies`. Use the `:peer` suffix to target only `peerDependencies`:
+
+```yaml title="pnpm-workspace.yaml"
+overrides:
+  "react-dom>react:peer": "^18.0.0 || ^19.0.0"
+  "@babel/*:peer": "*"
+```
+
+- Ranges, `workspace:`, and `catalog:` replace the peer range.
+- Non-range specifiers (`link:`, `file:`, `npm:`) leave `peerDependencies` unchanged (an untyped `"foo": "file:./foo.tgz"` replaces `foo` in `dependencies` only).
+- `-` removes the peer dependency and its `peerDependenciesMeta` entry.
+- To turn a peer into a direct dep: add it under `packageExtensions.<pkg>.dependencies` and override `"<pkg>>dep:peer": "-"`.
+
+### Dependency-type selectors and wildcards
+
+Append `:prod` (only `dependencies`), `:optional`, or `:peer` to the target to restrict the group. Both parent and target selectors support `*` on package names:
+
+```yaml title="pnpm-workspace.yaml"
+overrides:
+  "foo:prod": "^2.0.0"
+  "@esbuild/*:optional": "-"   # also removes duplicate declaration from dependencies
+```
+
+### Convergence overrides
+
+An empty range selector `"pkg@"` rewrites an edge only when the pinned version satisfies the range that edge declares, so compatible consumers converge without forcing an incompatible one:
+
+```yaml title="pnpm-workspace.yaml"
+overrides:
+  "form-data@": 4.0.6   # ^4.0.5 edges -> 4.0.6; ^3.0.0 edges untouched
+```
+
+Value must be an exact version (or a `catalog:` entry resolving to one), else `ERR_PNPM_INVALID_CONVERGENCE_OVERRIDE`. Only plain semver edges participate. Cannot combine with a parent selector (`"parent>pkg@"` rejected). A regular override wins for the same edge. pnpm warns when the override is stale.
 
 ## Common Use Cases
 

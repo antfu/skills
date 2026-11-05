@@ -27,9 +27,9 @@ export const hooks = {
 | `readPackage(pkg, ctx)` | after a dependency manifest is parsed | mutate a dependency's `package.json` (affects resolution) |
 | `afterAllResolved(lockfile, ctx)` | after resolution | mutate the lockfile before it's written |
 | `updateConfig(config)` | before install | mutate pnpm's settings (great with config dependencies) |
-| `beforePacking(pkg)` | before `pnpm pack`/`publish` tarball | customize the **published** manifest only |
-| `preResolution(opts)` | after reading lockfiles, before resolution | inspect/modify lockfile objects |
-| `importPackage(dir, opts)` | when writing to node_modules | **deprecated (v11.23.0)** — opts out of the parallel importer; will be removed |
+| `beforePacking(pkg, dir, context)` | before `pnpm pack`/`publish` tarball | customize the **published** manifest only |
+| `preResolution(opts, logger)` | after reading lockfiles, before resolution | mutate `opts.wantedLockfile`/`currentLockfile` in place |
+| `importPackage(dir, opts)` | when writing to node_modules | **removed (v12.0.0)** - ignored with a warning; use `packageImportMethod` |
 | `filterLog(log)` | per log entry | **deprecated/ignored (v12.0.0)** — use `loglevel` instead |
 
 ## readPackage
@@ -57,7 +57,7 @@ function readPackage(pkg, context) {
 export const hooks = { readPackage }
 ```
 
-> Mutations are not written to disk; they only affect resolution. Delete `pnpm-lock.yaml` to re-resolve an already-locked dependency. Removing `scripts` here does **not** stop a build — use the `allowBuilds` setting instead. To persist a change to a dependency's files, use `pnpm patch`.
+> Mutations are not written to disk; they only affect resolution. pnpm records a checksum of the pnpmfile in the lockfile and re-resolves affected dependencies when it changes. Guard fields with `?.` (e.g. `pkg.version?.startsWith`). Removing `scripts` here does **not** stop a build — use the `allowBuilds` setting instead. To persist a change to a dependency's files, use `pnpm patch`.
 
 ## updateConfig
 
@@ -89,17 +89,34 @@ export const hooks = {
 
 > Since v12.4.1, `config` is the **resolved** configuration (every setting pnpm will act on, from `.npmrc`, CLI, and defaults; unset keys are absent, not `null`). It also carries `registriesByScope` (scope → registry URL; rewrite to redirect fetches) and `configByUri` (registry URI → credentials). Since v12.3.0 the pnpmfile is loaded by many more commands (`run`, `exec`, `rebuild`, script shortcuts, `link`, `outdated`, `import`, `pack`, `publish`, `stage publish`), so `updateConfig` settings like `extraEnv`/`extraBinPaths` reach spawned processes and hook-provided catalogs resolve at pack time.
 
+#### Registry routing and command-line precedence
+
+Returning `registriesByScope` replaces the routing map: omitted scopes use its `default` (or the previous main registry); the built-in `@jsr` route stays unless overridden. Spread `...config.registriesByScope` to keep existing routes. A returned `registries` key is the `registries` setting (merges per key), not the routing map. Since v12.8, settings given on the command line (`--registry`, `--store-dir`, `--config.<key>`, `--no-optional`, ...) win: the hook sees them but pnpm restores them after it returns. Rewriting `registriesByScope` does not affect routes given on the command line.
+
 ## beforePacking
 
 Customize the manifest that ends up in the published tarball without touching your local `package.json`.
 
 ```js title=".pnpmfile.mjs"
 export const hooks = {
-  beforePacking(pkg) {
+  beforePacking(pkg, dir, context) {   // dir: project being packed; context.log(msg) for debug log
     delete pkg.devDependencies
     pkg.main = './dist/index.js'
     return pkg
   }
+}
+```
+
+## preResolution
+
+Only in-place changes to `options.wantedLockfile`/`currentLockfile` count; the return value is ignored, and a hook that throws or leaves an invalid lockfile fails the install. With `--frozen-lockfile` the changed wanted lockfile is checked against manifests. `logger.info(msg)`/`logger.warn(msg)` print messages.
+
+```js title=".pnpmfile.mjs"
+export const hooks = {
+  preResolution({ wantedLockfile }, logger) {
+    delete wantedLockfile.importers?.['.']   // re-resolve root deps
+    logger.info('Dropped locked root dependencies')
+  },
 }
 ```
 
@@ -126,6 +143,7 @@ export const finders = {
 
 ```bash
 pnpm why --find-by=react17
+pnpm list --find-by=react17 --find-by=other   # repeatable; matches if any finder matches
 ```
 
 ## Custom resolvers & fetchers (advanced)
@@ -148,6 +166,8 @@ const fetcher = {
 module.exports = { resolvers: [resolver], fetchers: [fetcher] }
 ```
 
+Built-in fetchers: `localTarball`, `remoteTarball`, `gitHostedTarball`, `git`, `directory`, `binary` (runtime archives like Node.js). A result from a built-in fetcher must be returned unchanged (changed `filesMap` is rejected; changed `manifest`/`requiresBuild` ignored) - return a `{ delegate }` envelope to install different files.
+
 > `hooks.fetchers` was removed in v11 — use the top-level `fetchers` export instead.
 
 ### Delegating to built-in fetchers
@@ -160,13 +180,13 @@ fetch: (cafs, resolution) => ({
 })
 ```
 
-> Prefer the envelope over calling `fetchers.*` directly: it is the only form that works in both pnpm and pacquet (the Rust port), where `cafs`/`fetchers` arrive as `null` over IPC.
+> The envelope works for every resolution in every pnpm version. In pnpm 12, `cafs` is a handle (with `storeDir` and `tempDir()`) to pass to the built-in `fetchers`.
 
 ## Related settings
 
 ```yaml title="pnpm-workspace.yaml"
 ignorePnpmfile: false                  # ignore the pnpmfile entirely
-pnpmfile: ['.pnpmfile.mjs']            # local pnpmfile location(s)
+pnpmfile: ['.pnpmfile.mjs']            # local pnpmfile location(s); default falls back to .pnpmfile.cjs if no .mjs
 globalPnpmfile: ~/.pnpm/global_pnpmfile.mjs
 ```
 
@@ -183,7 +203,8 @@ Prefer `overrides`/`packageExtensions` for simple cases; use hooks for condition
 ## Key Points
 
 - Prefer `.pnpmfile.mjs` with `export const hooks`/`finders`/`resolvers`/`fetchers`.
-- New hooks: `updateConfig` (mutate settings), `beforePacking` (published manifest), `preResolution`, `importPackage`.
+- Hooks: `updateConfig` (mutate settings), `beforePacking` (published manifest), `preResolution`. `importPackage` was removed in v12.
+- With `sharedWorkspaceLockfile: false`, each project runs its own pnpmfile hooks, then the root's.
 - Pair `updateConfig` with config dependencies to share settings/catalogs across repos.
 - `--ignore-scripts` does **not** disable the pnpmfile; use `ignorePnpmfile`.
 

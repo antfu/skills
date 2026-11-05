@@ -39,6 +39,8 @@ Reference in `package.json` with `catalog:`:
 
 `catalog:` is shorthand for `catalog:default`. The `catalog:` protocol is valid in `package.json` `dependencies`, `devDependencies`, `peerDependencies`, and `optionalDependencies`, plus in `overrides` inside `pnpm-workspace.yaml`. It also works on the CLI: `pnpm add react@catalog:` and `pnx shx@catalog:`.
 
+The default catalog can also be written as `catalogs.default`; defining both `catalog` and `catalogs.default` fails ("The 'default' catalog was defined multiple times").
+
 ## Named Catalogs
 
 Create multiple catalogs for different scenarios:
@@ -79,6 +81,12 @@ Reference named catalogs:
   }
 }
 ```
+
+## Adding to a catalog from the CLI
+
+`pnpm add --save-catalog <dep>` writes the range to the default catalog and `catalog:` to `package.json`; `--save-catalog-name <name>` picks a named catalog. `catalogMode` controls whether `pnpm add` does this without the flag.
+
+Errors: `ERR_PNPM_CATALOG_ENTRY_NOT_FOUND_FOR_SPEC` (no entry for the dep), `ERR_PNPM_CATALOG_ENTRY_INVALID_RECURSIVE_DEFINITION` (an entry is itself a `catalog:` reference).
 
 ## workspace:, file:, and link: entries
 

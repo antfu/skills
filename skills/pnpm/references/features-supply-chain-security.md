@@ -21,7 +21,8 @@ allowBuilds:
 
 - Packages **not listed** are unreviewed and blocked by default.
 - `strictDepBuilds: true` (default) ⇒ unreviewed builds make install exit non-zero (`ERR_PNPM_IGNORED_BUILDS`). Set `false` to warn instead.
-- During install, unreviewed packages with build scripts are auto-added to `pnpm-workspace.yaml` with a placeholder so you can set `true`/`false`.
+- During install, unreviewed packages with build scripts are auto-added to `pnpm-workspace.yaml` with the placeholder `set this to true or false` so you can set `true`/`false`.
+- Git/tarball deps are never approved by bare name: use the exact resolved path (with commit) or the repo URL (`foo@git+https://github.com/org/foo.git: true`, also covers tarball downloads from GitHub/GitLab/Bitbucket).
 
 > `allowBuilds` replaces the removed `onlyBuiltDependencies`, `neverBuiltDependencies`, `ignoredBuiltDependencies`, `onlyBuiltDependenciesFile`, and `ignoreDepScripts`.
 
@@ -29,11 +30,32 @@ allowBuilds:
 
 ```bash
 pnpm approve-builds            # interactive prompt
-pnpm approve-builds --all      # approve all pending
+pnpm approve-builds --all      # approve all pending (cannot combine with names)
 pnpm approve-builds esbuild fsevents !core-js   # ! = deny
 pnpm add --allow-build=esbuild my-bundler       # approve while adding
 pnpm add -g --allow-build=esbuild esbuild       # global (replaces approve-builds -g)
 ```
+
+Naming one package both approved and denied fails (`ERR_PNPM_APPROVE_BUILDS_CONTRADICTING_ARGS`). Approved pending packages are rebuilt immediately. Writing `allowBuilds` also removes the ignored legacy settings from the file.
+
+### Permissions and agent skills (v12.11.0)
+
+`pnpm approve` (= `pnpm permissions approve`; `pnpm permissions ls` lists) reviews what each dependency may do: `build` (run build scripts) and `skills` (pnpm links the agent skills the package ships, from its `skills/<name>/SKILL.md`, into the project's agent skill dirs). Decisions go in a `permissions` map; a package's `permissions` entry outranks its `allowBuilds` entry. Build decisions are written to `permissions` only if the file already has it, otherwise to `allowBuilds`.
+
+```yaml title="pnpm-workspace.yaml"
+permissions:
+  drizzle-kit:
+    build: true
+    skills: [guide, migrate]   # true = all, false = none, list = exactly these
+  some-pkg:
+    skills: false
+skills:
+  dirs: [.claude/skills]       # default: existing .<agent>/skills dirs + the running agent's; [] disables skills
+```
+
+- Install never fails on pending skills; it prints "Agent skills awaiting approval" for direct deps (only dep groups the install includes). Run `pnpm install` before `pnpm approve`.
+- `pnpm approve drizzle-kit !esbuild` (`!` denies), `--all` approves everything.
+- Links are named after the skill dir (fallback `pnpm-<package>-<skill>`, `/` in scope becomes `+`), listed in a `# pnpm` block of a `.gitignore` in each skills dir. Not linked by global installs, `dlx`, or `deploy`.
 
 ### Escape hatch (dangerous)
 
@@ -41,12 +63,14 @@ pnpm add -g --allow-build=esbuild esbuild       # global (replaces approve-build
 dangerouslyAllowAllBuilds: true   # runs ALL build scripts now and in the future — avoid
 ```
 
+Explicitly denied packages (`false` in `allowBuilds`, `build: false` in `permissions`) stay blocked.
+
 ## Minimum release age
 
 Delay installing freshly published versions so malicious releases (usually pulled within an hour) are avoided. Applies to **all** deps, including transitive.
 
 ```yaml title="pnpm-workspace.yaml"
-minimumReleaseAge: 1440          # minutes; default 1440 (1 day) since v11
+minimumReleaseAge: 1440          # minutes; default 1440 (1 day)
 minimumReleaseAgeExclude:        # always install newest of these immediately
   - webpack
   - '@myorg/*'
@@ -54,7 +78,8 @@ minimumReleaseAgeExclude:        # always install newest of these immediately
 ```
 
 - `minimumReleaseAgeStrict` — when no in-range version satisfies the age, fail (default when you set `minimumReleaseAge` yourself) vs. fall back.
-- `minimumReleaseAgeIgnoreMissingTime` — skip the check for registries that omit the `time` field (default `true`).
+- `minimumReleaseAgeIgnoreMissingTime` — skip the check for registries that omit the `time` field (default `true`); also governs `trustPolicy` (undatable packages are skipped with a warning instead of `ERR_PNPM_MISSING_TIME`).
+- Does not apply to config dependencies pinned with `version+integrity`. `minimumReleaseAgeExcludePrune: true` (and `trustPolicyExcludePrune`, v12.4.0) drop stale exclude entries on install.
 
 ## Trust policy
 
@@ -67,10 +92,12 @@ trustPolicyExclude:
 trustPolicyIgnoreAfter: 525600   # ignore the check for pkgs published > N minutes ago
 ```
 
+The check also covers the pnpm version pinned in `packageManager`/`devEngines.packageManager`.
+
 ## Block exotic transitive sources
 
 ```yaml title="pnpm-workspace.yaml"
-blockExoticSubdeps: true   # default
+blockExoticSubdeps: true   # default (on)
 ```
 
 When `true`, only **direct** dependencies may use exotic sources (git repos, direct tarball URLs); all transitive deps must come from a trusted source (registry, local path, workspace link, or trusted GitHub repos).
@@ -85,7 +112,7 @@ pnpm install --update-checksums   # narrow opt-in after verifying the new bytes
 
 ## Pin packages to their registry
 
-If you install from more than one registry, use `namedRegistries` aliases for packages that must come from a specific one. Since v11.20.0 pnpm records these under registry-qualified lockfile keys (`<name>@<registryName>:<version>`), so a package can't be silently substituted by another registry publishing the same name/version.
+If you install from more than one registry, use `namedRegistries` aliases for packages that must come from a specific one. pnpm records these under registry-qualified lockfile keys (`<name>@<registryName>:<version>`), so a package can't be silently substituted by another registry publishing the same name/version.
 
 ## Lockfile scanners: two-document lockfile
 
@@ -110,4 +137,7 @@ Source references:
 - https://pnpm.io/settings/dependency-resolution#trustpolicy
 - https://pnpm.io/settings/dependency-resolution#blockexoticsubdeps
 - https://pnpm.io/supply-chain-security
+- https://pnpm.io/agent-skills
+- https://pnpm.io/cli/permissions
+- https://pnpm.io/settings/build#permissions
 -->

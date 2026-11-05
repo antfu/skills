@@ -7,8 +7,7 @@ description: Essential pnpm commands for package management, running scripts, wo
 
 pnpm provides a comprehensive CLI. Commands resemble npm/yarn but with unique features.
 
-> **pnpm v12 is a Rust rewrite** of v11, stable, keeping v11's commands, flags, settings, and lockfile format. A few behaviors differ (see best-practices-migration). One removed flag fails outright: `pnpm install --resolution-only` is gone — use `pnpm peers check`.
-
+> **pnpm v12 is a Rust rewrite** of v11, stable, keeping v11's commands, flags, settings, and lockfile format. A few behaviors differ (see best-practices-migration).
 ## Installation Commands
 
 ```bash
@@ -18,10 +17,12 @@ pnpm add -D <pkg>       # devDependency       (also -d)
 pnpm add -O <pkg>       # optionalDependency  (also -o)
 pnpm add -E <pkg>       # exact version       (also -e)
 pnpm add <pkg>@<version>
+pnpm add <alias>@npm:<pkg>[@<version>]   # install under another local name
 pnpm remove <pkg>       # aliases: rm, uninstall, un
 pnpm update             # alias: up
 pnpm update --latest    # ignore semver ranges (-L)
 pnpm update -i          # interactive
+pnpm update --depth 0   # direct deps only
 ```
 
 ### Clean / reproducible installs
@@ -31,9 +32,12 @@ pnpm install --frozen-lockfile   # fail if lockfile would change (auto in CI)
 pnpm ci                          # clean install = pnpm clean + install --frozen-lockfile
 pnpm clean                       # remove node_modules in all workspace projects (alias: purge)
 pnpm clean --lockfile            # also delete pnpm-lock.yaml
+pnpm install --no-frozen-lockfile  # allow lockfile updates (e.g. in CI)
+pnpm install --lockfile-only     # update lockfile without node_modules (also on add)
+pnpm install --allow-build=esbuild --allow-build='!core-js'  # (v12.7+) allow/deny build scripts, recorded in allowBuilds
 ```
 
-> Since v11, an integrity mismatch against the lockfile is a hard error (`ERR_PNPM_TARBALL_INTEGRITY`). Use `pnpm install --update-checksums` only after verifying the new bytes. In CI, pnpm also fails on lockfiles written by a newer pnpm major.
+> Since v11, an integrity mismatch against the lockfile is a hard error (`ERR_PNPM_TARBALL_INTEGRITY`). Use `pnpm install --update-checksums` only after verifying the new bytes. Since v12.7, `--force` no longer installs optional deps whose os/cpu/libc mismatch the host (`forceIgnoresPlatform: true` restores it). In CI, pnpm also fails on lockfiles written by a newer pnpm major.
 
 ## Script Commands
 
@@ -43,10 +47,13 @@ pnpm run build -- --watch
 pnpm run --if-present build
 pnpm set-script test "vitest run"   # add/update a scripts entry (alias: ss)
 pnpm exec <cmd>          # run a local binary, e.g. pnpm exec eslint .
+pnpm exec -r <cmd>       # in every workspace project (pnpm options may precede the command name)
+pnpm run "/^watch:/"     # regex selector: run all matching scripts
+pnpm run -s <script>     # -s = --sequential for run (and `pnpm -s <script>`), unlike elsewhere
 ```
 
 - **Hidden scripts:** names starting with `.` (e.g. `.helper`) can't be run directly, only called from other scripts.
-- **Built-in vs script conflict:** `clean`, `setup`, `deploy`, `rebuild` prefer a same-named `package.json` script. Force the built-in with `pnpm pm <name>` (e.g. `pnpm pm clean`).
+- **Built-in vs script conflict:** `clean`, `setup`, `deploy`, `rebuild`, `tasks` prefer a same-named `package.json` script. Force the built-in with `pnpm pm <name>` (e.g. `pnpm pm clean`).
 
 ### dlx / pnx — run without installing
 
@@ -61,12 +68,13 @@ pnx --package=@scope/tool tool --help
 
 ### Run another package manager / runtime with pnx (v12)
 
-Naming a package manager (`npm`, `yarn`, `bun`) or runtime (`node`, `deno`, `bun`) provisions the real thing, not the npm package of that name:
+Naming a package manager (`pnpm`, `npm`, `yarn`, `bun`) or runtime (`node`, `deno`, `bun`) provisions the real thing, not the npm package of that name:
 
 ```bash
 pnx yarn@4 install
 pnx npm@11 ci
 pnx node@22 --version
+pnx --cpu arm64,x64 --os linux some-cli   # pick platform-tagged optional deps (also --libc)
 pnx yarn@npm:yarn@1.22.22       # a specifier that locates a package installs it unchanged
 ```
 
@@ -87,7 +95,8 @@ pnpm --filter <pkg-name> <cmd>      # by name (-F shorthand)
 pnpm --filter "./packages/core" test
 pnpm --filter "...@scope/app" build   # package + its dependencies
 pnpm --filter "@scope/core..." test   # package + its dependents
-pnpm --filter "...[origin/main]" build  # changed since git ref
+pnpm --filter "...[origin/main]" build  # changed since merge base with ref (v12.7+)
+pnpm --filter "!./packages/**" --filter @scope/core build  # filters apply in order (v12.7+)
 ```
 
 ## Patches
@@ -101,11 +110,11 @@ pnpm patch-remove <pkg>@<version>
 ## Linking local packages
 
 ```bash
-pnpm link <dir>          # link a path into this project's node_modules (path only!)
+pnpm link <dir>...       # link paths into node_modules (path only!); also writes a link: dep and a root `overrides` entry
 pnpm add -g .            # register the current package's bins globally
 ```
 
-> Breaking in v11: `pnpm link` accepts **only relative/absolute paths** (no global store resolution, no `--global`, no bare `pnpm link`). Use `pnpm add -g .` to expose bins system-wide.
+> Breaking in v11: `pnpm link` accepts **only relative/absolute paths** (no global store resolution, no `--global`, no bare `pnpm link`). Use `pnpm add -g .` to expose bins system-wide. `pnpm unlink` removes the overrides.
 
 ## Global packages (v11 isolated installs)
 
@@ -138,8 +147,21 @@ pnpm shim rm yarn
 pnpm runtime set node 22 -g       # install & expose node (alias: rt)
 pnpm runtime set node lts -g
 pnpm runtime set deno 2 -g
+pnpm runtime set node 22            # no -g: add to project devEngines.runtime (-P: engines.runtime)
 pnpm install --no-runtime         # skip installing devEngines.runtime entries
 ```
+
+The Node runtime does not bundle `npm`/`npx`/`corepack`; install npm with `pnpm add -g npm`.
+
+### Rust toolchain (v12.11+)
+
+```bash
+pnpm add rust@1.95                # pin in rust-toolchain.toml (channel: version, stable, beta, nightly, nightly-YYYY-MM-DD)
+pnpm add -g rust@stable           # global toolchain; bare cargo/rustc use project-pinned one
+pnx --package=rust@nightly-2026-01-01 cargo build   # one-off release (v12.11.1)
+```
+
+See features-multi-ecosystem.
 
 ## Store management
 
@@ -172,11 +194,14 @@ pnpm pack
 pnpm publish -r --no-git-checks
 pnpm version patch|minor|major|2.0.0    # bump version, commit + tag
 pnpm version prerelease --preid beta
+pnpm version patch --dry-run            # preview (also works with -r)
 pnpm deprecate <pkg>@<range> "message"
 pnpm dist-tag add <pkg>@<version> <tag>
 pnpm unpublish <pkg>@<version>          # discouraged; prefer deprecate
-pnpm sbom --sbom-format cyclonedx       # SBOM: cyclonedx (1.7) | spdx (2.3)
+pnpm sbom --sbom-format cyclonedx       # SBOM: cyclonedx (1.7) | spdx (2.3); needs lockfile, manifest optional
 pnpm stage publish ...                  # staged publishing (defer 2FA)
+pnpm token list|create|revoke <id>      # registry auth tokens (v12.13+; create: --read-only, --cidr)
+pnpm profile get|set|enable-2fa|disable-2fa   # registry profile (set password prompts; never pass on CLI)
 ```
 
 ## Release management (native, v11.13+)
@@ -197,7 +222,7 @@ See features-versioning for the full workflow.
 pnpm -r run <script>           # runs the tasks graph (see features-task-orchestration)
 pnpm -r run --dry-run build    # inspect the graph
 pnpm tasks status              # running/waiting tasks per concurrency group (v12.6)
-pnpm pipeline [name]           # cached CI-style run (v12.4, experimental)
+pnpm pipeline [name]           # cached CI-style run (v12.4, experimental; `remoteCache` shares results)
 ```
 
 ## Cache (registry metadata)
@@ -215,6 +240,8 @@ pnpm self-update [<version>]   # updates the packageManager pin, or installs glo
 pnpm with current install      # run a specific pnpm version for one command
 pnpm with 11.0.0 install
 pnpm approve-builds [--all]    # review dependency build scripts (writes allowBuilds)
+pnpm approve [--all] [pkg] [!pkg]  # = pnpm permissions approve (v12.11+): build scripts AND agent skills
+pnpm permissions [list]        # granted/denied permissions + packages awaiting approval
 ```
 
 ## Useful Flags
@@ -234,7 +261,7 @@ pnpm install --strict-peer-dependencies
 - `pnpm link` only takes paths; use `pnpm add -g .` for global bins.
 - Manage Node/Deno/Bun with `pnpm runtime set`; skip them at install with `--no-runtime`.
 - Publishing/registry commands: `version`, `view`, `whoami`, `deprecate`, `dist-tag`, `unpublish`, `sbom`, `stage`.
-- v12 adds native releases (`change`, `version -r`, `lane`), task inspection (`tasks status`), `pipeline`, `shim`, and `cache` commands; `pnx` can run other package managers/runtimes.
+- v12 adds native releases (`change`, `version -r`, `lane`), task inspection (`tasks status`), `pipeline`, `shim`, and `cache` commands; `pnx` can run other package managers/runtimes. v12.11+ adds `pnpm permissions`/`approve` (also agent skills), `rust` toolchain support; v12.13+ adds `pnpm token`.
 
 <!--
 Source references:
@@ -254,4 +281,8 @@ Source references:
 - https://pnpm.io/cli/pipeline
 - https://pnpm.io/cli/shim
 - https://pnpm.io/cli/pnx
+- https://pnpm.io/cli/permissions
+- https://pnpm.io/cli/profile
+- https://pnpm.io/cli/token
+- https://pnpm.io/cli/exec
 -->
