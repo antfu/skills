@@ -3,7 +3,7 @@ name: antfu-create-pr
 description: Create a reviewable GitHub pull request from the current branch with a Conventional Commits title, a concise evidence-based body, and before/after screenshots for UI changes. Use when asked to open, create, publish, or prepare a PR.
 metadata:
   author: Anthony Fu
-  version: "2026.11.05"
+  version: "2026.11.10"
 ---
 
 # Create Pull Request
@@ -63,7 +63,8 @@ feat: add task feature, fix sidebar, update deps, refactor utils
 Required in every PR:
 
 - `## Summary`: the problem or capability first, then what changed and why this approach. Mention if the PR is stacked and on what.
-- Linked issues: `closes #123` / `fixes #123` / `refs #123` so GitHub links and auto-closes.
+- Linked issues: one per line as a list item, e.g. `- close #123`, `- close #456`, so GitHub renders each as a pretty issue card and auto-closes it. Use `- refs #789` for issues that should stay open.
+- `## User prompts`: the model and harness in use, then a short summary of what the user asked for during the session, facts only. See [pr-body](references/pr-body.md#user-prompts).
 - `## Verification`: exact commands run and their results, plus anything left unverified. Show proof matched to the change type (bug: same input before and after; perf: same workload measured both sides; CLI: real output). See [Evidence by change type](references/pr-body.md#evidence-by-change-type).
 
 Optional, only when it helps the reviewer:
