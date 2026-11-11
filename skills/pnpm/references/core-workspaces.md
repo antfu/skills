@@ -23,6 +23,10 @@ packages:
   - '!**/test/**'
 ```
 
+### Converting from `workspaces`
+
+If the root `package.json` has a `workspaces` field (npm/Yarn/Bun) and there's no `pnpm-workspace.yaml`, `pnpm install` creates one with the same patterns. An existing file is never changed (pnpm warns on mismatch); `--ignore-workspace` skips creation.
+
 ## Workspace Protocol
 
 Use `workspace:` protocol to reference local packages:
@@ -84,6 +88,8 @@ pnpm --filter "...[origin/main]" test
 pnpm --filter "[HEAD~5]" lint
 ```
 
+Since v12.7.0, `[<since>]` compares against the merge base of the current branch and `<since>` (uncommitted changes still count; needs Git 2.24+), and a catalog version change in `pnpm-workspace.yaml` marks affected projects changed. Selectors are evaluated in order, so a later inclusion can restore a project an earlier exclusion removed; if the first selector is an exclusion, filtering starts from all projects. `--no-fail-if-no-match` overrides `failIfNoMatch: true`. Defaults can be set via `testPattern` and `changedFilesIgnorePattern` (string arrays).
+
 ## Workspace Commands
 
 ### Install dependencies
@@ -103,8 +109,9 @@ pnpm --filter @myorg/app add @myorg/utils
 # Run in all packages with that script
 pnpm -r run build
 
-# Run in topological order (dependencies first)
-pnpm -r --workspace-concurrency=1 run build
+# Recursive run/exec/test are topologically ordered by default (--no-sort disables)
+pnpm -r run build
+pnpm -r --workspace-concurrency=1 run build   # one at a time
 
 # Run in parallel
 pnpm -r --parallel run test
@@ -138,13 +145,15 @@ preferWorkspacePackages: true
 sharedWorkspaceLockfile: true
 # Workspace protocol handling on publish
 saveWorkspaceProtocol: rolling
-# Concurrent workspace scripts
+# Concurrent workspace scripts (default: min(4, CPU cores), container CPU quota aware; <=0 = cores minus abs value)
 workspaceConcurrency: 4
 # Use root deps to resolve peers of all projects
 resolvePeersFromWorkspaceRoot: true
 # Scripts required in every project (else `pnpm -r run <name>` fails)
 requiredScripts:
   - build
+# Allow adding deps to the workspace root without -w
+ignoreWorkspaceRootCheck: false
 # Downgrade dependency-cycle warnings; also turns ERR_PNPM_TASK_CYCLE into a warning
 ignoreWorkspaceCycles: false
 ```
@@ -174,6 +183,10 @@ packageConfigs:
   project-2:
     savePrefix: '~'
 ```
+
+## Versioning & releases
+
+pnpm versions workspaces natively: `pnpm change` + `pnpm version -r` (see features-versioning).
 
 ## Publishing Workspaces
 
@@ -235,4 +248,5 @@ Source references:
 - https://pnpm.io/workspaces
 - https://pnpm.io/filtering
 - https://pnpm.io/workspace-task-orchestration
+- https://pnpm.io/cli/recursive
 -->

@@ -46,6 +46,8 @@ Manually maintained by Anthony Fu with his preferred tools, setup conventions, a
 | [antfu](skills/antfu) | Anthony Fu's preferences and best practices for app/library projects (eslint, pnpm, vitest, vue, etc.) |
 | [antfu-create-pr](skills/antfu-create-pr) | Open reviewable PRs: Conventional Commits title, evidence-based body, before/after screenshots via `gh --attach` (adapted from [moeru-ai/airi](https://github.com/moeru-ai/airi/blob/main/.agents/skills/create-pr/SKILL.md)) |
 | [antfu-issue-triage](skills/antfu-issue-triage) | Triage issues and PRs of the current repo: find fixed, duplicate, and spam items, suggest labels, gauge demand, and confirm an action table before acting |
+| [antfu-query](skills/antfu-query) | Interview the user about a plan or decision in rounds via the agent's question tool until reaching shared understanding (adapted from [mattpocock/skills](https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md)) |
+| [antfu-simplify](skills/antfu-simplify) | Simplify the current PR or changes with an ablation study: keep only what is proven needed, with just-right abstraction, minimal, robust, and universal code |
 
 > [!TIP]
 > For design, see [antfu/design](https://github.com/antfu/design), which ships the `antfu-design` skill alongside the `@antfu/design` package.
@@ -71,7 +73,7 @@ Generated from official documentation and fine-tuned by Anthony.
 
 ### What Makes This Collection Different?
 
-This collection is opinionated, but the key difference is that it uses git submodules to directly reference source documentation. This provides more reliable context and allows the skills to stay up-to-date with upstream changes over time.
+This collection is opinionated, but the key difference is that it clones the source documentation locally (into the git-ignored `sources/`) and generates skills directly from it. This provides more reliable context and allows the skills to stay up-to-date with upstream changes over time.
 
 The project is also designed to be flexible - you can use it as a template to generate your own skills collection.
 
@@ -90,8 +92,8 @@ Fork this project to create your own customized skill collection.
 1. Fork or clone this repository
 2. Install dependencies: `pnpm install`
 3. Update `meta.ts` with your own projects and skill sources
-4. Run `pnpm start cleanup` to remove existing submodules and skills
-5. Run `pnpm start init` to clone the submodules
+4. Run `pnpm start cleanup` to remove existing sources and skills
+5. Run `pnpm start init` to clone the sources
 6. Run `pnpm start sync` to pull the latest source docs
 7. Ask your agent to `Generate skills for \<project\>` (recommended one at a time to manage token usage)
 

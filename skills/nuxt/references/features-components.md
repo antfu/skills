@@ -114,6 +114,7 @@ Progress bar for page navigation:
 <template>
   <NuxtLoadingIndicator
     color="repeating-linear-gradient(to right, #00dc82 0%, #34cdfe 50%, #0047e1 100%)"
+    finish-color="#00dc82"
     :height="3"
     :duration="2000"
     :throttle="200"
@@ -188,7 +189,7 @@ Server components (experimental):
 </template>
 ```
 
-Islands render in their own isolated Vue app keyed on props (for cacheability). `useRoute()` and other vue-router composables inside an island reflect the island's own request, **not** the current page — pass route info in via props or the `context` prop. Props/context are sent as GET query params (may appear in logs/CDN caches).
+Islands render in their own isolated Vue app keyed on props (for cacheability). `useRoute()` and other vue-router composables inside an island reflect the island's own request, **not** the current page — pass route info in via props or the `context` prop. Props/context are sent as GET query params (may appear in logs/CDN caches). `provide`/`inject` do not cross the island boundary (pass props or use a plugin). Treat props as untrusted: clamp numeric/array props that drive `v-for` (Nuxt caps numeric `v-for` at 10,000 in islands), use `defineOptions({ inheritAttrs: false })` on islands with polymorphic roots, and never spread uncontrolled objects like `route.query` onto islands (fall-through `onclick`-style attributes run as JS).
 
 ## NuxtImg and NuxtPicture
 

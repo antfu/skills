@@ -7,11 +7,10 @@ description: Global virtual store for shared node_modules, git-worktree multi-ag
 
 ## Global virtual store
 
-By default each project has its own `node_modules/.pnpm` virtual store containing hard links to the content-addressable store. With the **global virtual store** enabled, pnpm keeps one shared virtual store at `<store-path>/links/` (find it via `pnpm store path`), and each project's `node_modules` contains only **symlinks** into it.
+By default each project has its own `node_modules/.pnpm` virtual store containing hard links to the content-addressable store. With the **global virtual store** enabled, pnpm keeps one shared virtual store at `<store-path>/links/` (find it via `pnpm store path`, or at `virtualStoreDir` when set), and each project's `node_modules` contains only **symlinks** into it.
 
 ```yaml title="pnpm-workspace.yaml"
-virtualStoreType: global    # canonical spelling since v11.23.0
-# enableGlobalVirtualStore: true   # older spelling, still works
+virtualStoreType: global    # enableGlobalVirtualStore: true is equivalent
 ```
 
 ```
@@ -24,14 +23,15 @@ project-b/node_modules/lodash -> <store>/links/@/lodash/4.17.21/<hash>/node_modu
 ```
 
 - **Package identity = hash of the dependency graph.** Two projects with the same `lodash@4.17.21` and the same transitive tree point at the exact same directory (NixOS-style). Different peers ⇒ separate entries.
+- No packages are linked into a per-project `.pnpm`; it holds only the project's current lockfile and hidden hoisted deps.
 - **Near-zero per-project cost** and **instant installs** once a version is in the store.
-- It is the default for `pnpm dlx`/`pnx` and global installs; for **project** installs it is still **opt-in/experimental**.
+- It is the default for global installs (`pnx` does not use it); for **project** installs it is still **opt-in/experimental**.
 
 ### Limitations
 
 - **CI:** auto-disabled (no warm cache to benefit from).
 - **Trust:** the store is shared writable state — only for mutually trusting projects/users/jobs; protect the path with filesystem permissions.
-- **ESM hoisting:** relies on `NODE_PATH`, which Node ignores for ESM imports. Since v11.23.0 pnpm-spawned processes (`run`, `exec`, lifecycle scripts, `dlx`) also get a `NODE_OPTIONS --import` resolve hook restoring those lookups under ESM. A `node` started outside pnpm doesn't get it, and `extendNodePath: false` disables the whole mechanism — declare missing deps with `packageExtensions` (or `@pnpm/plugin-esm-node-path`) if they must resolve either way.
+- **ESM hoisting:** relies on `NODE_PATH`, which Node ignores for ESM imports. pnpm-spawned processes (`run`, `exec`, lifecycle scripts) also get a `NODE_OPTIONS --import` resolve hook restoring those lookups under ESM. A `node` started outside pnpm doesn't get it, and `extendNodePath: false` disables the whole mechanism — declare missing deps with `packageExtensions` (or `@pnpm/plugin-esm-node-path`) if they must resolve either way.
 
 ## Git worktrees for multi-agent development
 
@@ -59,7 +59,7 @@ cd ../feature-auth && pnpm install # subsequent worktrees: nearly instant, just 
 
 Each worktree has its own `node_modules` tree (so agents can install different versions on different branches without conflict), but all package contents come from the one shared store. Remove a worktree with `git worktree remove ./feature-auth`.
 
-> The pnpm repo itself uses this setup and ships helper scripts (`pnpm worktree:new <branch|pr>`). Assumes all worktrees/agents share the same trust boundary.
+> Assumes all worktrees/agents share the same trust boundary.
 
 ## Global packages (v11 isolated installs)
 
@@ -75,6 +75,9 @@ pnpm bin -g                          # global bin dir = $PNPM_HOME/bin
 ```
 
 - `pnpm install -g` (no args) is **not** supported — use `pnpm add -g <pkg>`.
+- `pnpm add -g <pkg>` **replaces every existing group containing `<pkg>`**: after `pnpm add -g eslint`, the `eslint,prettier` group is gone (prettier and its bins too). Re-add the whole group (`pnpm add -g eslint,prettier`) or use `pnpm update -g`.
+- Cannot be installed globally: pnpm itself (`ERR_PNPM_GLOBAL_PNPM_INSTALL`, use `pnpm self-update`), a package whose bin a `pnpm shim` already provides (`ERR_PNPM_GLOBAL_BIN_CONFLICT`), `crate:`/Python deps. `pnpm add -g rust` installs a Rust toolchain, not the npm `rust` package.
+- `pnpm outdated -g` and `pnpm approve-builds -g` work. Orphaned install dirs older than 5 min are cleaned at the next global add/update/`self-update`. With `virtualStoreType: project`, each group keeps its own `node_modules/.pnpm`.
 - Binaries live in `$PNPM_HOME/bin` (not `$PNPM_HOME` directly). Run `pnpm setup` after upgrading to put it on PATH.
 - Register a local package's bins globally with `pnpm add -g .` (replaces `pnpm link --global`).
 - `pnpm list -g --depth=<n>` (n>0) only works for a single install group.
@@ -83,15 +86,17 @@ pnpm bin -g                          # global bin dir = $PNPM_HOME/bin
 
 A globally installed `node`/`deno`/`bun` (and any shimmed tool) runs the version the **current project** pins — no version-manager, no shell hooks. pnpm walks up to the nearest project that provides the command:
 
-- **Runtimes** (`node`/`deno`/`bun`): only the manifest pin counts (`devEngines.runtime`, then `engines.runtime`); the version is downloaded into the global virtual store on demand. A dependency cannot supply the `node` you run.
+- **Runtimes** (`node`/`deno`/`bun`): only a runtime pin counts (`devEngines.runtime`, then `engines.runtime`; for `node` since v12.7.0 also `.node-version`/`.nvmrc`, see below); the version is downloaded into the global virtual store on demand. A dependency cannot supply the `node` you run.
 - **Package managers** (`npm`/`yarn`/`bun`, v12.0.0-rc.6): the project's `packageManager`/`devEngines.packageManager` pin counts and pnpm provisions it.
 - **Any other package:** the project's `node_modules/.bin/<name>`.
 
+`.node-version`/`.nvmrc` (v12.7.0): the nearest directory declaring a Node.js runtime wins; within one directory `package.json` > `.node-version` > `.nvmrc`. Accepts a version/range (optional `v`), `node`, `stable`, `lts/*`, `lts/<codename>`; comments ignored; nvm-only values (`system`, `default`, custom aliases) are ignored and count as unpinned.
+
 If the project provides nothing (or the lookup is declined), the global version runs — dispatch never makes a command fail.
 
-**Trust:** under the default `auto` policy a signed stable Node.js switches silently; everything else (Deno, Bun, prereleases, ordinary packages) asks once per project + per binary, remembered machine-locally. CI (non-interactive) always uses the global version. Set the `globalShims` policy to `prompt` or `always` to change this; `PNPM_SHIM_BYPASS=1` bypasses for one command.
+**Trust:** under the default `auto` policy a signed stable Node.js and package-manager pins resolved from the npm registry (signature-verified, e.g. `yarn@1`, `npm`) switch silently; everything else (Deno, Bun, prereleases, ordinary packages) asks once per project + per binary, remembered machine-locally. CI (non-interactive) always uses the global version. Set the `globalShims` policy to `prompt` or `always` to change this; `PNPM_SHIM_BYPASS=1` bypasses for one command.
 
-Only runtimes participate by default; enable others via `globalShims` (global config only, keyed by package name), then reinstall the package:
+Runtimes, Rust toolchain shims (`cargo`, `rustc`, ... following the project's toolchain file) and globally installed package managers participate by default; enable others via `globalShims` (global config only, keyed by package name), then reinstall the package:
 
 ```yaml title="~/.config/pnpm/config.yaml"
 globalShims:
@@ -107,6 +112,8 @@ pnpm shim rm yarn
 ```
 
 A shim has no global install behind it; it exists purely to let the project decide. Never created as a side effect of `pnpm setup`/install (it shadows PATH). Since v12.3.0 every project-aware global command pnpm writes is a native executable on every platform (`.exe` on Windows, not `.cmd`/`.ps1`).
+
+To add `bun` as a runtime (not package manager) use `pnpm add bun@tool:1.3.0`; the explicit runtime spelling is `node@tool:22` (not `@runtime:`).
 
 ## Other package managers (v12)
 
@@ -127,7 +134,7 @@ pnpm add yarn@npm:yarn@1.22.22   # a package specifier still installs that packa
 
 - `virtualStoreType: global` ⇒ `node_modules` is symlinks into one shared, hash-addressed store.
 - Best for many checkouts of the same repo (git worktrees, parallel agents); auto-disabled in CI.
-- Watch out for ESM packages importing undeclared deps (NODE_PATH limitation; v11.23 resolve hook covers pnpm-spawned processes).
+- Watch out for ESM packages importing undeclared deps (NODE_PATH limitation; the resolve hook covers pnpm-spawned processes).
 - Global installs are isolated per package; comma-list to share a group; bins live in `$PNPM_HOME/bin`.
 - v12: global `node`/`deno`/`bun` and shimmed tools follow the project's pin; pnpm can install other package managers (npm/yarn/bun).
 
@@ -140,4 +147,5 @@ Source references:
 - https://pnpm.io/cli/shim
 - https://pnpm.io/settings/node-modules#virtualstoretype
 - https://pnpm.io/settings/other#globalshims
+- https://pnpm.io/settings/node-modules#virtualstoredir
 -->

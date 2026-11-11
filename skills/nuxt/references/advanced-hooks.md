@@ -73,6 +73,9 @@ export default defineNuxtModule({
 | `nitro:config` | Before Nitro config finalized |
 | `vite:extend` | Vite context created |
 | `vite:extendConfig` | Before Vite config finalized |
+| `build:manifest` | Customize the manifest Nitro uses for `<script>`/`<link>` tags (entries have `prefetch`/`preload` flags) |
+| `rsbuild:config` | Rsbuild builder: before the instance is created (config has `client` and `ssr` environments); `rspack:config`/`rspack:configResolved` also fire |
+| `rsbuild:compile` / `rsbuild:compiled` | Before first compile / after an environment compiled |
 
 ## App Hooks (Runtime)
 
@@ -163,6 +166,8 @@ export default definePlugin((nitroApp) => {
   })
 })
 ```
+
+> Inside a Nitro plugin, `useServerHooks()` from `nuxt/server` registers renderer hooks (`render:html`) and `NuxtServerHooks`; Nitro's own hooks (`request`, `response`, `error`) come from `useNitroHooks()` in `nitro/app`.
 
 ### Common Nitro Hooks
 

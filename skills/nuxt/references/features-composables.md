@@ -59,6 +59,9 @@ const cookie = useCookie('token')
 useHead({ title: 'My Page' })
 useSeoMeta({ description: 'Page description' })
 
+// Client-only, runs when app is initialized and browser idle (use in .client plugins)
+onNuxtReady(() => { /* heavy init */ }, { timeout: 2000 }) // timeout caps idle wait
+
 // Accessibility — announce content to screen readers
 const { polite, assertive } = useAnnouncer() // needs <NuxtAnnouncer> (Nuxt 4.4+)
 const { set } = useRouteAnnouncer()           // automatic on navigation
@@ -218,6 +221,8 @@ export default defineEventHandler(() => {
   return db.query('SELECT * FROM users')
 })
 ```
+
+Only files directly in `server/utils/` are scanned; re-export subdirectory helpers from a top-level file.
 
 ## Shared Utilities (`shared/`)
 

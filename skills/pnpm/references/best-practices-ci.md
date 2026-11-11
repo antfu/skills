@@ -7,14 +7,18 @@ description: Optimizing pnpm for continuous integration and deployment workflows
 
 Best practices for using pnpm in CI/CD environments for fast, reliable builds.
 
-> **CI auto-behaviors:** When pnpm detects a CI environment it switches to **frozen-lockfile** mode automatically and (since v11) **fails on an incompatible lockfile** written by a newer pnpm major instead of rewriting it — keep the CI pnpm version in sync with the one that generated the lockfile. The global virtual store is auto-disabled in CI (no warm cache).
+> **CI auto-behaviors:** When pnpm detects a CI environment it switches to **frozen-lockfile** mode automatically (opt out with `--no-frozen-lockfile`; force or disable detection with the `ci` setting) and **fails on an incompatible lockfile** written by a newer pnpm major instead of rewriting it — keep the CI pnpm version in sync with the one that generated the lockfile. The global virtual store is auto-disabled in CI (no warm cache).
 
 ## Installing pnpm in CI
 
-Outside GitHub Actions (which has its own action), the docs now recommend the **standalone install script** over Corepack:
+On CI systems that run jobs in a container image (GitLab CI, Bitbucket Pipelines), use the **official image** `ghcr.io/pnpm/pnpm:<major>` as the job image: pnpm is already on `PATH`, and `pnpm runtime set node lts -g` installs Node.js. For your own Dockerfile, copy pnpm in: `COPY --from=ghcr.io/pnpm/pnpm:12 /opt/pnpm /opt/pnpm` (use the `-alpine` tag for musl bases), then symlink `pnpm pn pnpx pnx` from `/opt/pnpm` into `/usr/local/bin`.
+
+Elsewhere outside GitHub Actions (which has its own action), use the **standalone install script**, never Corepack. Save it to a file first, with a fallback download so a failed download never runs a partial script:
 
 ```sh
-curl -fsSL https://get.pnpm.io/install.sh | sh -
+{ curl -fsSL https://get.pnpm.io/ -o /tmp/pnpm-install.sh \
+  || curl -fsSL https://github.com/pnpm/get.pnpm.io/releases/latest/download/install.sh -o /tmp/pnpm-install.sh; } \
+  && sh /tmp/pnpm-install.sh
 ```
 
 - **No Node.js needed** — pnpm is self-contained and can install a runtime afterwards (`pnpm runtime set node lts -g`).
@@ -25,7 +29,7 @@ curl -fsSL https://get.pnpm.io/install.sh | sh -
 
 ### Cache the metadata cache too
 
-Since v11.22.0, `pnpm cache path` prints pnpm's metadata cache directory. Caching it (alongside the store) also caches the lockfile verification log, letting a job skip re-checking an unchanged lockfile against supply-chain policies — the dominant install cost once the store is warm.
+`pnpm cache path` prints pnpm's metadata cache directory. Caching it (alongside the store) also caches the lockfile verification log, letting a job skip re-checking an unchanged lockfile against supply-chain policies — the dominant install cost once the store is warm.
 
 ## GitHub Actions
 
@@ -148,7 +152,13 @@ build:
 
 ## Docker
 
-> **PATH change (v11):** global pnpm binaries now live in `$PNPM_HOME/bin`. In Docker set `ENV PATH="$PNPM_HOME/bin:$PATH"` (not `$PNPM_HOME`). There is also an official image `ghcr.io/pnpm/pnpm:<version>` (Debian slim, pnpm only — choose Node yourself via `pnpm runtime set node <ver> -g` or `devEngines.runtime`).
+> **PATH:** global pnpm binaries live in `$PNPM_HOME/bin`. In Docker set `ENV PATH="$PNPM_HOME/bin:$PATH"` (not `$PNPM_HOME`). The official image `ghcr.io/pnpm/pnpm:<version|major|latest>` (Debian slim, or `-alpine` variants; pnpm + bundled `node-gyp`, no Node.js) already sets `PNPM_HOME=/pnpm` and PATH; choose Node via `pnpm runtime set node <ver> -g` or `devEngines.runtime` (`pnpm install` downloads it).
+>
+> **Always copy `pnpm-workspace.yaml`** (when present) before `pnpm install`/`pnpm fetch`: it holds project settings and workspace patterns, and omitting it can change installs or fail frozen installs. Also copy patches and files named by `include`.
+>
+> **BuildKit cache mounts:** if the image has a runtime from `pnpm runtime set node -g`, don't mount over `/pnpm/store`; mount `/var/cache/pnpm` and pass `--store-dir /var/cache/pnpm`.
+>
+> **`pnpm fetch` recipe:** `COPY pnpm-lock.yaml pnpm-workspace.yaml /app/`, `RUN pnpm fetch`, then after `COPY . /app` run `pnpm install --offline --frozen-lockfile` (fetch only fills the virtual store); use a separate stage with `pnpm fetch --prod` + `install --offline --frozen-lockfile --prod` for production deps.
 
 ### Multi-Stage Build
 
@@ -180,7 +190,7 @@ WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
-COPY --from=builder /app/pnpm-lock.yaml ./
+COPY --from=builder /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
 
 # Production install
 RUN pnpm install --frozen-lockfile --prod
@@ -306,6 +316,7 @@ Source references:
 - https://pnpm.io/continuous-integration
 - https://pnpm.io/docker
 - https://pnpm.io/cli/ci
+- https://pnpm.io/settings/other#ci
 - https://pnpm.io/cli/cache-path
 - https://github.com/pnpm/action-setup
 -->

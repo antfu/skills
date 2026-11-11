@@ -154,6 +154,10 @@ const randomValue = useState('random', () => Math.random())
 </template>
 ```
 
+### iOS Safari Phone Numbers
+
+iOS Safari auto-links phone numbers, dates, addresses and emails before hydration, causing iOS-only mismatches. Disable with `app.head.meta: [{ name: 'format-detection', content: 'telephone=no, date=no, email=no, address=no' }]`, and wrap numbers that should stay tappable in `<a href="tel:...">`.
+
 ## Browser-only Code
 
 ### Use `import.meta.client`
@@ -323,6 +327,10 @@ onMounted(async () => {
 </template>
 ```
 
+## Resource Hints and Deferred Work
+
+Nuxt emits `preload`/`modulepreload` for chunks the page needs and `prefetch` for lazily imported chunks, rendered as `data-href` and activated after `onNuxtReady` (`experimental.deferPrefetchHints: false` to prefetch immediately). To stop a chunk group being prefetched (e.g. signed-in-app chunks on a public prerendered page), set `chunk.prefetch = false` per entry in the `build:manifest` hook. Defer non-critical client work with `onNuxtReady(() => import('big-lib'), { timeout: 2000 })`.
+
 ## Debugging SSR Issues
 
 ### Check Rendering Context
@@ -351,5 +359,6 @@ DevTools shows payload data and hydration state.
 Source references:
 - https://nuxt.com/docs/guide/concepts/auto-imports#vue-and-nuxt-composables
 - https://nuxt.com/docs/guide/best-practices/hydration
+- https://nuxt.com/docs/guide/best-practices/performance
 - https://nuxt.com/docs/getting-started/state-management#best-practices
 -->

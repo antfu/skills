@@ -10,9 +10,9 @@ pnpm settings are split into **two** categories. Knowing where each goes is the 
 | Category | Stored in | Format |
 |----------|-----------|--------|
 | **All pnpm/install settings** (`nodeLinker`, `hoistPattern`, `autoInstallPeers`, `overrides`, `catalog`, …) | `pnpm-workspace.yaml` (project) and `config.yaml` (global) | YAML, **camelCase** keys |
-| **Auth & registry credentials** (`_authToken`, `cert`, `key`, …) | `.npmrc` (project, gitignored) and global `rc` | INI |
+| **Auth, registry credentials, TLS, proxy, `local-address`** (`_authToken`, `cert`, `key`, …) | `.npmrc` (project, gitignored) and global `auth.ini` | INI |
 
-> **Important changes:** pnpm no longer reads settings from the `pnpm` field of `package.json`, and `.npmrc` is now used **only** for authentication/registry credentials. Everything else belongs in `pnpm-workspace.yaml`. Keys in YAML are **camelCase** (e.g. `nodeLinker`), not the kebab-case used by old `.npmrc` files.
+> **Important changes:** pnpm no longer reads settings from the `pnpm` field of `package.json` (a setting found there is ignored with a warning), and `.npmrc` is now used **only** for authentication/registry credentials. Everything else belongs in `pnpm-workspace.yaml`. Keys in YAML are **camelCase** (e.g. `nodeLinker`), not the kebab-case used by old `.npmrc` files.
 
 > The upstream settings reference is now split into pages by area — `settings/build`, `settings/cli`, `settings/dependency-resolution`, `settings/network`, `settings/node-modules`, `settings/store`, `settings/peer-dependencies`, `settings/versioning`, `settings/other` — but they are all the same camelCase keys in `pnpm-workspace.yaml`.
 
@@ -71,9 +71,35 @@ User-level non-auth settings live in a global YAML `config.yaml`:
 - `$XDG_CONFIG_HOME/pnpm/config.yaml` (if set)
 - Linux: `~/.config/pnpm/config.yaml`
 - macOS: `~/Library/Preferences/pnpm/config.yaml`
-- Windows: `~/AppData/Local/pnpm/config/config.yaml`
+- Windows: `%LOCALAPPDATA%\pnpm\config\config.yaml`
 
-The companion global `rc` file (same directory, named `rc`) holds only registry/auth settings.
+Auth INI settings go in `auth.ini` in the same directory (written by `pnpm login`/`pnpm config set` of auth keys).
+
+Project-only settings (structure of `node_modules`/workspace: `nodeLinker`, `hoistPattern`, `publicHoistPattern`, `shamefullyHoist`, `linkWorkspacePackages`, ...) must be in `pnpm-workspace.yaml`; in the global `config.yaml` they are ignored with a warning, and `pnpm config set --global` fails with `ERR_PNPM_CONFIG_SET_UNSUPPORTED_YAML_CONFIG_KEY`. Machine-level settings (`storeDir`, `cacheDir`, `packageImportMethod`, `minimumReleaseAge`, network) may be global. Share project-only settings across repos via a config dependency. Conversely, machine-state settings (`bin`, `configDir`, `dir`, `globalBinDir`, `globalDir`, `macosBackup`, `npmrcAuthFile`, `pnpmHomeDir`, `scope`, `stateDir`, `userconfig`, `workspaceDir`, `ci`, `symlinkedLockfileTargetDirs`, `tools`, ...) are ignored in a project's `pnpm-workspace.yaml` (`pnpm config set --location=project` fails with `ERR_PNPM_CONFIG_SET_NOT_A_PROJECT_SETTING`). `cacheDir`/`storeDir` are fine.
+
+## Splitting settings across files (config includes, v12.15+)
+
+The root `pnpm-workspace.yaml` can delegate settings to other YAML files and to config dependencies via `include`, so protected files (CODEOWNERS, read-only mounts, agent sandboxes) hold security settings while routine ones (catalogs) live in freely editable files.
+
+```yaml title="pnpm-workspace.yaml"
+configDependencies:
+  '@acme/pnpm-policy': 3.1.0
+pnpmfile: []                        # no pnpmfile: stop auto-picking up a new .pnpmfile.mjs
+include:
+  ./config/security.yaml: '*'       # any setting no other source owns
+  ./config/catalog.yaml: [catalog]  # list = permits AND reserves these settings
+  ./patches/patches.yaml: [patchedDependencies]
+  '@acme/pnpm-policy': [minimumReleaseAge, trustPolicy]   # config dep: list required
+```
+
+- Sources: local `./` or `../` `.yaml/.yml` files (must exist; no globs/absolute/URLs) or a name declared in `configDependencies`. Only the root file may define `include`; `include` cannot be delegated. Bad sources: `ERR_PNPM_INVALID_WORKSPACE_INCLUDE`.
+- One owner per setting: a duplicate claim fails with `ERR_PNPM_DUPLICATE_SETTING`; defining a non-delegated setting in a file fails with `ERR_PNPM_SETTING_NOT_DELEGATED`. A delegated setting its owner omits is simply unset by the project.
+- Catalogs: `catalog`/`catalogs.default`, `catalogs.<name>`, or `catalogs` (all). Entries of one catalog are never split.
+- Relative paths inside an included file (`patchedDependencies`, `patchesDir`, `packages`, `file:`/`link:` entries, ...) are relative to that file.
+- Writes (`pnpm add` with catalog, `approve-builds`, `patch-commit`, `audit --fix`, `config set --location project`) go to the owning file; unowned settings go to `pnpm-workspace.yaml`; config-dep-owned settings fail (`ERR_PNPM_SETTING_OWNED_BY_CONFIG_DEPENDENCY`).
+- A config dependency supplies settings declaratively through `"pnpm": { "config": "./config.yaml" }` in its `package.json` (file must stay inside the package, else `ERR_PNPM_INVALID_CONFIG_DEPENDENCY_ENTRY`). Not delegable to config deps: `configDependencies`, `pnpmfile`, `globalPnpmfile`, `bootConfig`, `packages`, `scriptShell`, path settings (`patchedDependencies`, `storeDir`, `lockfileDir`).
+- `bootConfig` sets the policy used when installing config dependencies / the pnpm version (before their settings load): accepts `minimumReleaseAge`, `minimumReleaseAgeExclude`, `minimumReleaseAgeStrict`, `minimumReleaseAgeIgnoreMissingTime`, `trustPolicy`, `trustPolicyExclude`, `trustPolicyIgnoreAfter`. Unset falls back to the regular value.
+- An `updateConfig` hook runs after merge and can still change anything.
 
 ## Per-project settings in a workspace (packageConfigs)
 
@@ -94,10 +120,10 @@ packageConfigs:
 
 ## .npmrc — authentication only
 
-Keep auth tokens out of the repo (gitignore the project `.npmrc`). Auth files, highest priority first:
+Keep auth tokens out of the repo (gitignore the project `.npmrc`). Auth INI files, highest priority first (override the project-trusted file with `npmrcAuthFile`):
 
 1. `<workspace root>/.npmrc` (project, gitignored)
-2. `<pnpm config>/auth.ini` (written by `pnpm login`)
+2. `<pnpm config>/auth.ini` (written by `pnpm login` since v12.16, and by `pnpm config set` of auth keys)
 3. `~/.npmrc` (fallback for npm compatibility)
 
 ```ini title=".npmrc"
@@ -108,7 +134,7 @@ Keep auth tokens out of the repo (gitignore the project `.npmrc`). Auth files, h
 
 ### Structured `_auth` (v11.10+, for CI)
 
-An alternative to many `//host/:_authToken=…` lines, keyed by registry URL. Honored **only** from the global `config.yaml` and the `pnpm_config__auth` (or `PNPM_CONFIG__AUTH`) env var — **ignored** in a project `.npmrc`/`pnpm-workspace.yaml`, so a checked-out repo can never supply auth. `pnpm login` writes this shape since v12.1.
+An alternative to many `//host/:_authToken=…` lines, keyed by registry URL. Honored **only** from the global `config.yaml` and the `pnpm_config__auth` (or `PNPM_CONFIG__AUTH`) env var - **ignored** in a project `.npmrc`/`pnpm-workspace.yaml`. `authToken` is the only field and may use `${NAME}`. Each entry also routes packages: `"@"` sets the default registry, `"@org"` routes that scope; priority is CLI flags, then `pnpm_config__auth` (overrides `registry`/`registries`), then global `config.yaml` (only where no `registry`/`registries` chooses). `pnpm login` wrote here in v12.1-12.15; since v12.16 it saves to `auth.ini`.
 
 ```yaml title="config.yaml (global only)"
 _auth:
@@ -127,12 +153,18 @@ Configure registries themselves (non-secret) in `pnpm-workspace.yaml`:
 registries:
   default: https://registry.npmjs.org/
   '@my-org': https://private.example.com/
-# Named registry aliases usable as a prefix, e.g. `pnpm add work:@corp/lib`
-namedRegistries:
-  work: https://npm.work.example.com/
+# Newer shape: keyed by URL, with scopes and a bare-specifier prefix (`pnpm add work:@corp/lib`)
+# registries:
+#   https://npm.work.example.com/:
+#     scopes: ['@corp']
+#     prefix: work
 ```
 
-> Security: since v11, env-variable expansion is disabled for registry/proxy URLs and credential keys in the **project** `.npmrc` (to stop a malicious repo from leaking secrets). Put dynamic-token lines in the user-level auth file instead.
+(`namedRegistries` is deprecated in favor of `prefix` in `registries`.)
+
+Per-scope tokens: `//npm.pkg.github.com/:_authToken` plus scoped keys; `tokenHelper=/abs/path` (user-level auth files only, absolute path, no args) prints a fresh token for expiring credentials.
+
+> Security: env-variable expansion is disabled for registry/proxy URLs, `//` keys, and credentials (`_authToken`, `_auth`, `_password`, `username`, `tokenHelper`, `cert`, `key`) in the **project** `.npmrc` (such settings are ignored with a warning). Put `${NPM_TOKEN}` lines in `auth.ini`/`~/.npmrc`, use `_auth`, or pass env var `pnpm_config_//registry.npmjs.org/:_authToken=...` via `env` (shells cannot `export` that name). Last resort for trusted CI: `PNPM_CONFIG_NPMRC_AUTH_FILE=.npmrc`. Likewise env vars are not expanded in `registry`/`registries`/`userAgent` values in `pnpm-workspace.yaml`.
 
 ## The `pnpm config` command
 
@@ -144,7 +176,7 @@ pnpm config set --location=project nodeVersion 22.0.0   # writes pnpm-workspace.
 # JSON values create arrays/objects
 pnpm config set --location=project --json allowBuilds '{"react": true}'
 
-# get/list print JSON (no longer INI) since v11
+# get prints strings/numbers/booleans as plain text, objects/arrays as JSON (`--json` forces JSON); list prints JSON
 pnpm config get nodeLinker
 pnpm config get 'allowBuilds.react'
 pnpm config list
@@ -152,7 +184,7 @@ pnpm config list
 
 ## Environment variables
 
-Use `pnpm_config_*` (or `PNPM_CONFIG_*`). pnpm **no longer reads `npm_config_*`**.
+Use `pnpm_config_*` (or `PNPM_CONFIG_*`). pnpm **no longer reads `npm_config_*`**, except `NPM_CONFIG_WORKSPACE_DIR`, `npm_config_userconfig`, and URL-scoped credentials (`npm_config_//host/:_authToken`). In config files, `${NAME}`, `${NAME-fallback}`, `${NAME:-fallback}` expand; `${NAME?}` expands to empty silently (v12.7+).
 
 ```bash
 pnpm_config_save_exact=true pnpm add foo
@@ -181,7 +213,7 @@ pnpm_config_save_exact=true pnpm add foo
 }
 ```
 
-`devEngines.packageManager` supports ranges (resolved version stored in lockfile); `packageManager` requires an exact version. Override `onFail` without editing the manifest via `pmOnFail` / `runtimeOnFail` settings.
+`devEngines.packageManager` supports ranges (resolved version stored in lockfile); `packageManager` requires an exact version. Declaring `packageManager` with another manager (`npm`, `yarn`, `bun`) is allowed. With no lockfile pin yet, pnpm records the running version if it satisfies the range and is older than `minimumReleaseAge`, else the newest old-enough version. Override `onFail` without editing the manifest via `pmOnFail` / `runtimeOnFail` settings.
 
 ## Key Points
 
@@ -199,4 +231,5 @@ Source references:
 - https://pnpm.io/pnpm-workspace_yaml
 - https://pnpm.io/package_json
 - https://pnpm.io/cli/config
+- https://pnpm.io/config-includes
 -->

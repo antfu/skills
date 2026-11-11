@@ -19,8 +19,8 @@ Every PR that changes what a user sees ships a before/after pair per affected st
    ```
 
 4. Capture the same states from both revisions with whatever the repo already has: Playwright, Storybook / Histoire stories, Vishot, `agent-browser screenshot`, or the app's own dev server plus a browser. Prefer an existing story or e2e scenario over an ad hoc route.
-5. Use identical viewport, theme, locale, fixture data, and readiness condition for both revisions. Write outputs to an ignored directory such as `.pr-shots/base/<id>.png` and `.pr-shots/head/<id>.png`.
-6. Look at every image. Reject blank, loading, error, or unstable captures unless that state is the subject of the change. A failed capture blocks the PR; record the reason instead of dropping the state.
+5. Use identical viewport, theme, locale, fixture data, and readiness condition for both revisions. Use demo or sanitized data only, never real user content. Write outputs to an ignored directory such as `.pr-shots/base/<id>.png` and `.pr-shots/head/<id>.png`.
+6. Look at every image. Agents can confidently capture the wrong page. Reject blank, loading, error, or unstable captures unless that state is the subject of the change. A failed capture blocks the PR; record the reason instead of dropping the state.
 7. Record `before: absent` for a newly added state and `after: removed` for a deleted one.
 8. Run the exact same capture command for both revisions. When the setup is not obvious from the images, add the command and a short manifest (`id`, `title`, `viewport`, `before` / `after` revisions) under the `## Visual changes` table so a reviewer can reproduce it.
 
@@ -28,7 +28,7 @@ Remove the temporary worktree after the PR is created: `git worktree remove /tmp
 
 ## Attach
 
-GitHub CLI 2.99+ uploads local images and videos with `--attach` and rewrites matching local paths in the body to the uploaded URL. Write the body with ordinary local paths, then pass each file:
+Newer GitHub CLI (2.99+) can attach files directly from the command line: it uploads local images and videos with `--attach` ([docs](https://docs.github.com/en/github-cli/github-cli/attaching-files-with-github-cli)) and rewrites matching local paths in the body to the uploaded URL. Write the body with ordinary local paths, then pass each file:
 
 ```markdown
 ## Visual changes
@@ -74,4 +74,5 @@ Source references:
 - https://github.com/moeru-ai/airi/blob/main/.agents/skills/upload-github-attachment/SKILL.md
 - https://github.com/antfu/pulls.review/pull/76
 - https://island94.org/2026/08/programmatically-upload-attachments-to-github-issues-pull-requests-comments
+- https://hugorcd.com/writing/what-my-pull-requests-look-like-now (Hugo Richard)
 -->

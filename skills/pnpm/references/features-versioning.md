@@ -39,7 +39,7 @@ pnpm version -r --dry-run    # preview
 pnpm version -r --filter …   # narrow (selection expands to settle deps/fixed groups)
 ```
 
-No git commit/tag is created (many packages, many versions) — commit yourself, then `pnpm publish -r`. Working tree must be clean unless `--dry-run`/`--no-git-checks`. Every package bumped through a `workspace:` range to a bumped dependency is bumped too. First release of a package publishes the manifest version verbatim (v11.16.0+).
+No git commit/tag is created (many packages, many versions) — commit yourself, then `pnpm publish -r`. Working tree must be clean unless `--dry-run`/`--no-git-checks`. Every package bumped through a `workspace:` range to a bumped dependency is bumped too. First release of a package publishes the manifest version verbatim (v11.16.0+); private packages skip that registry check and always use committed `CHANGELOG.md` (`repository` storage). Bumps run `preversion`/`version`/`postversion` scripts (skipped by `--dry-run`/`ignoreScripts`); `gitTagVersion: false` and `tagVersionPrefix` can be set in `pnpm-workspace.yaml`. `pnpm version -r` outside a workspace fails with `ERR_PNPM_WORKSPACE_ONLY`.
 
 ## Configuration (`versioning` in pnpm-workspace.yaml)
 
@@ -72,7 +72,7 @@ pnpm lane main --filter @example/cli    # graduate to stable on next version -r
 pnpm lane                               # show membership
 ```
 
-`N` counts from 0 and restarts when the stable target changes. Lane names: alphanumerics/hyphens, not purely numeric; `main` is reserved.
+`N` counts from 0 and restarts when the stable target changes. A package already on another lane can't move directly (`ERR_PNPM_VERSIONING_ALREADY_ON_LANE`): go through `main` first. An empty `--filter` match fails with `ERR_PNPM_VERSIONING_NO_PACKAGES`. Lane names: alphanumerics/hyphens, not purely numeric; `main` is reserved.
 
 ## Epics
 
@@ -81,10 +81,14 @@ An epic ties member packages to a lead, constraining each member's major to a ba
 ## Validation & the ledger
 
 ```sh
-pnpm change check   # (v12.4.0) validate committed versions against epic bands + fixed groups; reads no intents — run on every PR
+pnpm change check   # (v12.4.0) validate pending intents (plans the release; fails on e.g. an intent naming a package outside the workspace) + committed versions against epic bands and fixed groups — run on every PR
 ```
 
 `pnpm version -r` records consumed intents in `.changeset/ledger.yaml` (committed, append-only). Consumption is tracked per project — an intent file is deleted only once every project it names has released, making cherry-picks/merge-backs between release branches safe.
+
+## Release notes on pnpr
+
+For registries declared `serverType: pnpr`, `registry` storage sends each section as the version's release notes instead of packing it into the tarball. Intents naming one package go to its notes; intents naming several go once into the release notes (named `v<version>` after the epic lead or the one fixed group). `pnpm publish -r --batch` sends the whole release in one request; `pnpm version -r --release-notes <file>` adds a hand-written summary above the composed notes; `pnpm publish --publication-name` names the release.
 
 <!--
 Source references:

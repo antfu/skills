@@ -22,6 +22,8 @@ In `package.json`:
 }
 ```
 
+Selector form: `<alias>@npm:<package>[@<version-or-tag>]`, scoped targets allowed (`pnpm add babel-core@npm:@babel/core@8.0.6`). The alias is the name written to `package.json`; `npm:` here is the package-alias protocol, not a named registry. To replace a package everywhere in the graph, use `overrides`.
+
 ## Use Cases
 
 ### Multiple Versions of Same Package
@@ -148,20 +150,24 @@ Aliases work with any valid pnpm specifier:
 }
 ```
 
-## Registry Aliases (namedRegistries)
+## Registry Aliases (registries `prefix`)
 
-Distinct from package aliases: a `namedRegistries` prefix selects *which registry* a package is fetched from.
+Distinct from package aliases: a registry `prefix` selects *which registry* a package is fetched from. `namedRegistries` is deprecated (still read, only for prefixes `registries` does not declare); declare `prefix` in `registries` instead.
 
 ```yaml title="pnpm-workspace.yaml"
-namedRegistries:
-  work: https://npm.work.example.com/
+registries:
+  https://npm.work.example.com/:
+    prefix: work
+    scopes: ["@corp"]   # optional: also route the scope here
 ```
 
 ```bash
 pnpm add work:@corp/lib@^2.0.0   # resolves @corp/lib against the work registry
 ```
 
-The built-in `gh:` alias points at GitHub Packages. Auth is reused from per-URL `.npmrc` entries.
+Built-in prefixes: `gh:` (GitHub Packages) and `npmjs:` (public npm, pins a dep to the public registry even when `registry` points at a proxy; `npm:` cannot do that). Both can be overridden. Auth is reused from per-URL `.npmrc` entries. Reserved prefix names (`file`, `link`, `workspace`, `npm`, `jsr`, `git`, `catalog`, `http`, `pkg`, `tool`, ...) fail with `ERR_PNPM_RESERVED_NAMED_REGISTRY_NAME`.
+
+Packages from a prefixed registry get registry-qualified lockfile keys (`foo@work:1.0.0`) so the same name@version from two registries never collapses. Every non-built-in prefix referenced by the lockfile must stay declared (`ERR_PNPM_MISSING_NAMED_REGISTRY`).
 
 ## Best Practices
 
@@ -181,5 +187,6 @@ The built-in `gh:` alias points at GitHub Packages. Auth is reused from per-URL 
 Source references:
 - https://pnpm.io/aliases
 - https://pnpm.io/settings#namedregistries
+- https://pnpm.io/registries
 -->
 

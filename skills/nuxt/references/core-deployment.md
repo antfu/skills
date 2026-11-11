@@ -34,6 +34,16 @@ nuxt generate
 
 Output in `.output/public/` - deploy to any static host.
 
+### Prerender Configuration
+
+Use the top-level `prerender` option (`routes`, `ignore`, `crawlLinks`) rather than `nitro.prerender`; Nitro-specific options (`concurrency`, `failOnError`) remain in `nitro.prerender`.
+
+```ts
+export default defineNuxtConfig({
+  prerender: { crawlLinks: true, routes: ['/sitemap.xml'], ignore: ['/dynamic'] },
+})
+```
+
 ### Preset Configuration
 
 ```ts
@@ -221,4 +231,5 @@ docker run -p 3000:3000 my-nuxt-app
 Source references:
 - https://nuxt.com/docs/getting-started/deployment
 - https://nitro.build/deploy
+- https://nuxt.com/docs/getting-started/prerendering
 -->

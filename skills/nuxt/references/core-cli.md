@@ -110,7 +110,7 @@ Output is created in `.output/` directory.
 npx nuxt generate
 ```
 
-Equivalent to `nuxt build --prerender`. Creates static HTML files for deployment to static hosting.
+Equivalent to `nuxt build --prerender`. Creates static HTML files for deployment to static hosting. Configure prerendering with the top-level `prerender` option (`routes`, `ignore`, `crawlLinks`), which works with any server builder; Nitro-only options stay in `nitro.prerender`. The old `nitro.prerender.routes`/`crawlLinks` examples are superseded.
 
 ### Preview Production Build
 

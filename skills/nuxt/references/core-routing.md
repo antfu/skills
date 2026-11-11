@@ -9,10 +9,14 @@ Nuxt uses file-system routing based on vue-router. Files in `app/pages/` automat
 
 ## Nuxt 5 Routing Defaults
 
-- **Case-sensitive matching** (`router.options.sensitive: true`) — `/About` no longer matches `pages/about.vue`. Match link casing to file names, or set `router: { options: { sensitive: false } }`.
+- **Case-sensitive matching** (`router.options.sensitive: true`) — `/About` no longer matches `pages/about.vue`. Match link casing to file names, or set `router: { options: { sensitive: false } }`. `sensitive` can only be set in `nuxt.config` (the build fails if `app/router.options.ts` sets it). With `sensitive: false`, route rules match lower-cased paths, so regex constraints in rule patterns must be written for lower-case (`[a-z]`, not `[A-Z]`).
 - **Typed pages on by default** (`experimental.typedPages`) — `useRoute`, `navigateTo`, `<NuxtLink :to>`, and `router.push` are type-checked against your real routes. Referencing a route that doesn't exist is a type error. Opt out with `experimental.typedPages: false`.
 - **Normalized page component names** — a page is named after its route, not its filename (`pages/foo/index.vue` → `foo`, not `index`). Update any `<KeepAlive :include>` filters to route names, or set `experimental.normalizePageNames: false`.
 - **Serializable page meta extracted at build time** — every JSON-serializable `definePageMeta()` property is written into the generated route record; only non-serializable values (functions, refs, spreads) resolve at runtime.
+
+- **Route rule patterns use URLPattern** - `'/blog/*'` now matches nested paths (`/blog/2026/hello`); use `'/blog/:slug'` for one segment. Only one `*`/`**` per key (use `/:post/comments/**`). Regex constraints cannot match `%` or percent-encoded chars, or use `\b`. Rules also support `proxy: 'https://api.example.com/**'`.
+- **Unmatched client navigations load as a full document** (`experimental.serverPathFallback`) so `<NuxtLink to="/file.pdf">` reaches `public/` files or server routes.
+- **Build-time link check** - `experimental.templateDiagnostics` warns (`NUXT_B4025`) when a static `<NuxtLink to>` matches no page route.
 
 ## Basic Routing
 
@@ -276,4 +280,6 @@ Source references:
 - https://nuxt.com/docs/directory-structure/app/middleware
 - https://nuxt.com/docs/api/utils/define-page-meta
 - https://nuxt.com/docs/getting-started/upgrade
+- https://nuxt.com/docs/guide/recipes/custom-routing
+- https://nuxt.com/docs/guide/concepts/rendering
 -->

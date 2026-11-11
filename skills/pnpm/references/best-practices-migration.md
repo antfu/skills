@@ -9,17 +9,28 @@ Guide for migrating existing projects from npm or Yarn to pnpm, plus upgrading p
 
 ## Upgrading pnpm v11 → v12
 
-pnpm 12 is a **Rust rewrite** and is stable. It keeps v11's commands, flags, settings, and lockfile format — upgrading is not a migration. Only these differ (six change a result, one fails outright):
+pnpm 12 (native executable, no Node.js needed to run) reads the same `pnpm-lock.yaml`, `pnpm-workspace.yaml`, and store as v11 - upgrading is not a migration and there is no codemod. If still on v10, do v10 → v11 first (its codemod applies).
 
-- **`pnpm install --resolution-only` is removed** and errors. Use `pnpm peers check` (reads issues from the lockfile). Grep CI scripts for it before switching.
-- **Git dependency resolution:** GitHub/GitLab/Bitbucket specifiers resolve via the host's HTTPS URL and pnpm never records an SSH URL — one lockfile works with or without SSH keys. Run `pnpm update <pkg>` once to re-resolve an old `git@…` entry. For private SSH, use `git config --global url."git@github.com:".insteadOf https://github.com/`.
-- **Naming a package manager** installs the tool, not the npm package: `pnpm add -g yarn` installs Yarn (not the Classic `yarn` package), `pnx node@22` runs that Node.js release. A specifier like `yarn@npm:yarn@1.22.22` still installs the package.
-- **Project-aware global bins:** a global `node`/`deno`/`bun` runs the version the current project pins.
-- **`packageImportMethod: auto` hardlinks first on Linux** (was clone-first). Use `clone`/`clone-or-copy` if you edit files in `node_modules`.
-- **Cyclic dependency graphs** produce deterministic lockfiles; the first re-resolving install rewrites cyclic peer variants (one-time diff).
-- **`engineStrict`** now fails when a package depends through regular `dependencies` on an incompatible engine even under an `optionalDependencies` subtree.
+```sh
+pnpm self-update 12   # also updates the packageManager/devEngines.packageManager pin
+```
 
-> `latest` on npm still points at the v11 line; install v12 from the `latest-12` tag until it graduates.
+If you install pnpm another way, update the pin too, otherwise pnpm 12 runs the pinned pnpm 11. Then run `pnpm install`, fix reported settings, commit `package.json` and the lockfile. Behavior changes to check:
+
+- **Unrecognized `pnpm-workspace.yaml` settings fail** (`ERR_PNPM_UNRECOGNIZED_WORKSPACE_SETTINGS`) when the project pins a pnpm version the running one satisfies (else still a warning). `confirmModulesPurge` is rejected. `pnpm config` never fails on it.
+- **Boolean flag + separate value is rejected**: use `--frozen-lockfile=false` / `--no-frozen-lockfile`, not `--frozen-lockfile false`.
+- **Git dependency resolution:** GitHub/GitLab/Bitbucket specifiers resolve via the host's HTTPS URL and pnpm never records an SSH URL (no network probing). Old `git@...` lockfile entries change only on re-resolve (`pnpm update <pkg>`). Private SSH: `git config --global url."git@github.com:".insteadOf https://github.com/`.
+- **pnpmfile hooks:** `importPackage` is not run (use `packageImportMethod`); `filterLog` is ignored with a warning (use `loglevel`).
+- **`engineStrict`** fails when an incompatible package is reached via regular `dependencies` even under an optional subtree; with `--no-runtime`/`runtime: false` it checks the root `engines.node` against the active Node.js.
+- **Naming a package manager/runtime installs the tool**, not the npm package: `pnpm add -g yarn`, `pnx node@22`. `yarn@npm:yarn@1.22.22` still installs the package.
+- **Global `node`/`deno`/`bun` follow the project's pin** (`devEngines.runtime`, `engines.runtime`, `.node-version`, `.nvmrc`). Opt out with `globalShims: false` (global config) or `PNPM_SHIM_BYPASS=1`.
+- **Global commands under `sudo` fail** (`ERR_PNPM_SUDO_NOT_SUPPORTED`): `setup`, `self-update`, `add --global`.
+- **TLS:** uses the OS certificate store (fallback: bundled Mozilla CAs); `ca`/`cafile` still override. **`maxsockets`** no longer defaults to 50; only `networkConcurrency` bounds direct connections (proxied: 50 per origin).
+- **`shellEmulator`** uses pnpm's built-in shell (some `${NAME:=word}` forms are literal; unparsable scripts fail `ERR_PNPM_EXECUTOR_SHELL_EMULATOR_PARSE`). **`scriptsPrependNodePath`** is ignored.
+- **`packageImportMethod: auto` hardlinks first on Linux** (was clone-first). Set `clone` on btrfs/xfs to keep copy-on-write.
+- **Cyclic dependency graphs** give deterministic lockfiles; the first re-resolving install may rewrite cyclic peer variants once. Frozen installs are unaffected.
+- **`pnpm dlx`/`pnx` do not use the global virtual store.**
+- **`pnpm pack-app`** embeds Node.js 25.5.0 unless `--runtime`/`pnpm.app.runtime` is set. `--frozen-store` has no Node.js version requirement.
 
 ## Upgrading pnpm v10 → v11
 
@@ -27,7 +38,7 @@ v11 changes how configuration is read. Most of it is mechanical — run the code
 
 ```bash
 cd /path/to/project
-pnpx codemod run pnpm-v10-to-v11
+pnx codemod run pnpm-v10-to-v11   # pnpx on pnpm v10
 ```
 
 The codemod automatically:
@@ -46,7 +57,8 @@ Manual follow-ups (not automatable):
 - `npm_config_*` env vars → `pnpm_config_*` (CI, shell profiles, Docker).
 - `pnpm link <name>` → use a path (`pnpm link ./foo`); `pnpm link --global` → `pnpm add -g .`.
 - `pnpm install -g` (no args) and `pnpm server` removed.
-- A `package.json` script named `clean`/`setup`/`deploy`/`rebuild` now shadows the built-in — use `pnpm pm <name>` for the built-in.
+- A `package.json` script named like a built-in (e.g. `clean`, `deploy`) now shadows the built-in `pnpm <name>`; see the built-in/script name conflicts list in the scripts docs.
+- Docker images must copy `pnpm-workspace.yaml` (if present) before `pnpm install`.
 
 ## Migrating from npm / Yarn
 
@@ -322,6 +334,7 @@ Keep old lockfile in git history for easy rollback.
 <!--
 Source references:
 - https://pnpm.io/migration
+- https://pnpm.io/migration-v11
 - https://pnpm.io/cli/import
 - https://pnpm.io/configuring
 -->

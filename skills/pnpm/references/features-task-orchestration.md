@@ -71,6 +71,11 @@ pnpm tasks status [groups...]   # running + waiting tasks per group
 pnpm pm tasks status            # force built-in if a "tasks" script shadows it
 ```
 
+A subcommand is required. A waiting task shows its priority only when non-zero.
+
+```sh
+```
+
 ## Inspecting the graph
 
 ```sh
@@ -82,7 +87,9 @@ pnpm -r run --dry-run --json test   # nodes + edges as JSON
 
 - `--resume-from <pkg>` — resume at a package's task, skipping tasks a prior run of the same invocation recorded as passed.
 - `--reverse` — reverse every edge (dependents run first).
-- `--no-bail` — keep running independent ready tasks after a failure (default `--bail` cancels running tasks and stops dispatching).
+- `--no-bail` — keep running independent ready tasks after a failure; tasks depending on the failed one are skipped (default `--bail` stops dispatching and kills running tasks: SIGTERM, then SIGKILL after 2s on Unix). Accepted only by run/exec/test/start/stop/rebuild/install-test.
+- `--workspace-concurrency` defaults to min(4, available CPU cores), respecting container CPU quotas; `<= 0` means cores minus abs value (min 1).
+- `--report-summary` statuses: `passed|queued|running|skipped|failure` (failures carry `prefix`/`message`); non-requested tasks are keyed `<dir>#<task>`.
 - Output is inherited when only one script can run at a time; otherwise piped. Use `--stream` for immediate prefixed output or `--aggregate-output`.
 
 ## Cycles
@@ -118,6 +125,8 @@ pnpm pipeline --no-cache
 
 - **Caching:** a task is cacheable only when it declares `outputs` (`outputs: []` = "produces no files", makes a linter/test cacheable). `inputs` narrows the cache key (`+glob` adds to the default); `env` names hashed vars; `cache: false` opts out. The key also covers script text, dependency task keys, the lockfile, and the runtime. A hit restores files and replays logs.
 - A plain recursive `pnpm run` **never** restores from the pipeline cache; `outputs`/`inputs`/`env`/`cache`/`cargoTargetDir` are read by `pnpm pipeline` only.
+- **Remote cache:** a `remoteCache` setting shares signed results through a Turborepo-API server (e.g. Vercel Remote Cache) or pnpr. Machines restore only results signed by their `trustedKeys`; CI publishes with `PNPM_REMOTE_CACHE_URL/_TEAM/_TRUSTED_KEYS/_PRIVATE_KEY/_KEY_ID/_BUILDER_ID/_PUBLISH=true`. Published results include output files and terminal logs. A missing, untrusted, or unreachable cache is just a miss.
+- Accepts every `pnpm install` option (for its frozen install). Errors: `ERR_PNPM_NO_PIPELINES`, `ERR_PNPM_UNKNOWN_PIPELINE`, `ERR_PNPM_PIPELINE_FAIL`. `--report`/`--report-to <url>` submit run data; `--repo` with `--watch`/`--once`/`--interval` watches a repo.
 - **Cargo build state:** `cargoTargetDir: target` keeps a task's Cargo target dir between runs/worktrees via immutable snapshots.
 
 ## Other dependency-aware commands

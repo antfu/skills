@@ -17,7 +17,13 @@ By default (since v8), pnpm automatically installs missing non-optional peer dep
 autoInstallPeers: true
 ```
 
-On conflicting requirements (e.g. one dep needs `react@^16`, another `react@^17`), pnpm installs nothing and prints a warning — resolve it manually.
+On conflicting requirements (e.g. one dep needs `react@^16`, another `react@^17`), pnpm installs nothing and prints a warning - resolve it manually, or opt in to joining the ranges:
+
+```yaml title="pnpm-workspace.yaml"
+autoInstallPeersFromHighestMatch: true   # default false; joins ranges with ||, installs the highest match (react@17)
+```
+
+This also lets pnpm resolve missing required/optional peers from compatible versions elsewhere in the workspace (even with `autoInstallPeers: false`). A missing optional peer is only resolved if the workspace already has a satisfying version (e.g. from another project's devDependencies). To disable workspace-wide peer reuse, set both `autoInstallPeers` and `dedupePeerDependents` to `false`. Resolved peers are not added to your declared deps: if scripts run a peer's binary, declare it directly.
 
 ## Strict Peer Dependencies
 
@@ -37,10 +43,22 @@ resolvePeersFromWorkspaceRoot: true   # default; install shared peers once at th
 
 ```yaml title="pnpm-workspace.yaml"
 dedupePeerDependents: true   # default; share package instances across projects when peers match
-dedupePeers: false           # v10.33+: version-only peer suffixes (name@version), fewer instances
+dedupePeers: false           # version-only peer suffixes (name@version), fewer instances
+addMissingPeerTypes: false   # v12.12+: every peer `foo` also gets optional peer `@types/foo` (@babel/core -> @types/babel__core)
 ```
 
+`addMissingPeerTypes` helps with `enableGlobalVirtualStore`, where types installed in your project are otherwise not found next to the package. It changes the lockfile.
+
 ## Peer Dependency Rules
+
+`peerDependencyRules` is deprecated (still works): it only silences warnings after resolution. To change declared peer ranges so resolution changes, use `overrides` with `:peer`:
+
+```yaml title="pnpm-workspace.yaml"
+overrides:
+  'react:peer': '-'                  # remove the peer declaration (and its peerDependenciesMeta)
+  'button@2>react:peer': '16 || 17'  # widen the declared peer range
+  '@babel/*:peer': '*'
+```
 
 ```yaml title="pnpm-workspace.yaml"
 peerDependencyRules:
@@ -55,7 +73,7 @@ peerDependencyRules:
 
 ### ignoreMissing
 
-Suppress warnings for missing peer dependencies. Patterns: exact name (`react`), scope (`@babel/*`), or `*` (not recommended).
+Suppress warnings for missing peer dependencies. Patterns: exact name (`react`), scope (`@babel/*`), or `*` (not recommended). Does not support `parent>peer` selectors.
 
 ```yaml title="pnpm-workspace.yaml"
 peerDependencyRules:
@@ -78,7 +96,7 @@ peerDependencyRules:
 
 ### allowAny
 
-Resolve matching peers from any version, ignoring the declared range.
+Resolve matching peers from any version, ignoring the declared range. Name or glob only (no `parent>peer`).
 
 ```yaml title="pnpm-workspace.yaml"
 peerDependencyRules:
@@ -174,8 +192,8 @@ peerDependencyRules:
 ## Debugging Peer Dependencies
 
 ```bash
-# Report unmet/missing peers straight from the lockfile (v11)
-pnpm peers check
+# Report unmet/missing peers from the lockfile (exit code 1 on issues; bare `pnpm peers` = check)
+pnpm peers check            # also: --json, -r (all workspace projects), -g, --lockfile-only
 
 # See why a package is installed
 pnpm why <package>

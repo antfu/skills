@@ -42,6 +42,8 @@ pnpm patch-commit <path-from-step-1>
 pnpm patch-commit /tmp/abc123...
 ```
 
+`pnpm patch` extracts to `node_modules/.pnpm_patches/<pkg>` (or `--edit-dir`/`-d <dir>`; fails if non-empty: `ERR_PNPM_PATCH_EDIT_DIR_EXISTS`/`ERR_PNPM_EDIT_DIR_NOT_EMPTY`). Run `pnpm install` first (`ERR_PNPM_PATCH_NO_LOCKFILE` otherwise). If several versions are installed, pnpm asks which to patch and whether to apply to all (then the key is the bare package name). `patch-commit` accepts a path, or a package name/specifier (`ERR_PNPM_AMBIGUOUS_PATCH_TARGET` if several edit dirs match), and runs an install afterwards to apply the patch. To change a package's dependencies, use `overrides` or a hook, not a patched `package.json`.
+
 This creates a `.patch` file in `patches/` and records it in `pnpm-workspace.yaml`:
 
 ```
@@ -100,6 +102,8 @@ pnpm patch-remove <pkg>@<version>
 # Example  
 pnpm patch-remove express@4.18.2
 ```
+
+`patch-remove` with no args lists recorded patches and prompts. It deletes the patch files, removes the keys, and deletes an empty patches dir. Errors: `ERR_PNPM_NO_PATCHES_TO_REMOVE`, `ERR_PNPM_PATCH_NOT_FOUND`.
 
 Or manually:
 1. Delete the patch file from `patches/`

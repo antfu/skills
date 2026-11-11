@@ -3,26 +3,26 @@ name: pnpm
 description: Node.js package manager with strict dependency resolution. Use when running pnpm specific commands, configuring workspaces via pnpm-workspace.yaml, or managing dependencies with catalogs, patches, overrides, config dependencies, or the global virtual store.
 metadata:
   author: Anthony Fu
-  version: "2026.9.25"
+  version: "2026.11.5"
   source: Generated from https://github.com/pnpm/pnpm, scripts located at https://github.com/antfu/skills
 ---
 
 pnpm is a fast, disk space efficient package manager. It uses a content-addressable store to deduplicate packages across all projects on a machine, and enforces strict dependency resolution by default, preventing phantom dependencies.
 
-**pnpm v12 is a Rust rewrite** of v11: stable, and keeps v11's commands, flags, settings, and lockfile format — so most guidance here applies to both. A handful of v12 behaviors differ (git deps resolve via HTTPS, project-aware global bins, other package managers, `packageImportMethod: auto` hardlinks first on Linux, `--resolution-only` removed) — see best-practices-migration.
+**pnpm v12 is a Rust rewrite** of v11: stable, and keeps v11's commands, flags, settings, and lockfile format — so most guidance here applies to both. A handful of v12 behaviors differ (git deps resolve via HTTPS, project-aware global bins, other package managers, `packageImportMethod: auto` hardlinks first on Linux) — see best-practices-migration.
 
 **Configuration model (important):** pnpm settings live in `pnpm-workspace.yaml` (and the global `config.yaml`) using **camelCase** keys. `.npmrc` is used **only** for authentication/registry credentials, and the `pnpm` field of `package.json` is no longer read. When working in a pnpm project, check `pnpm-workspace.yaml` for settings/workspace structure and `.npmrc` only for auth. Always use `--frozen-lockfile` (or `pnpm ci`) in CI.
 
-> The skill is based on pnpm 12.x, generated at 2026-09-25. It covers v11+v12 behavior (config split, isolated global packages, `allowBuilds`, `pmOnFail`, global virtual store, native release management, workspace task orchestration, and experimental Python/Cargo support) where current docs describe them.
+> The skill is based on pnpm 12.18, generated at 2026-11-05. It covers v11+v12 behavior (config split, config includes, isolated global packages, `allowBuilds`, `pmOnFail`, global virtual store, native release management, workspace task orchestration, and experimental Python/Cargo support) where current docs describe them.
 
 ## Core
 
 | Topic | Description | Reference |
 |-------|-------------|-----------|
 | CLI Commands | install/add/remove/update, run, dlx/pnx, workspace, runtime, publishing (version, view, sbom, stage) | [core-cli](references/core-cli.md) |
-| Configuration | pnpm-workspace.yaml settings (camelCase), global config.yaml, packageConfigs, .npmrc auth | [core-config](references/core-config.md) |
+| Configuration | pnpm-workspace.yaml settings (camelCase), global config.yaml, config includes, packageConfigs, auth (.npmrc, auth.ini) | [core-config](references/core-config.md) |
 | Workspaces | Monorepo support: filtering, workspace protocol, shared lockfile, packageConfigs | [core-workspaces](references/core-workspaces.md) |
-| Store | Content-addressable store, virtual store, node linker modes, frozen/read-only store | [core-store](references/core-store.md) |
+| Store | Content-addressable store, virtual store, node linker modes (incl. loaded/store loader), frozen/read-only store | [core-store](references/core-store.md) |
 
 ## Features
 
@@ -36,7 +36,7 @@ pnpm is a fast, disk space efficient package manager. It uses a content-addressa
 | Peer Dependencies | Auto-install, strict mode, rules, dedupePeers, peers check | [features-peer-deps](references/features-peer-deps.md) |
 | Config Dependencies | Share hooks/settings/catalogs/patches across repos via configDependencies | [features-config-dependencies](references/features-config-dependencies.md) |
 | Global Virtual Store & Shims | Shared node_modules, git-worktree multi-agent setups, isolated global packages, project-aware bins, other package managers | [features-global-virtual-store](references/features-global-virtual-store.md) |
-| Supply-Chain Security | Build approval (allowBuilds), minimumReleaseAge, trustPolicy, lockfile integrity | [features-supply-chain-security](references/features-supply-chain-security.md) |
+| Supply-Chain Security | Build approval (allowBuilds), permissions and agent skills, minimumReleaseAge, trustPolicy, lockfile integrity | [features-supply-chain-security](references/features-supply-chain-security.md) |
 | Task Orchestration | Cross-project task graphs (tasks/dependsOn), concurrency groups, priority, pnpm pipeline | [features-task-orchestration](references/features-task-orchestration.md) |
 | Release Management | Native versioning: pnpm change/version -r/lane, lanes, epics, fixed groups | [features-versioning](references/features-versioning.md) |
 | Multi-Ecosystem | Python (pypi:) and Cargo (crate:) dependencies alongside npm (experimental) | [features-multi-ecosystem](references/features-multi-ecosystem.md) |

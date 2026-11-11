@@ -1,7 +1,7 @@
 /**
- * Repositories to clone as submodules and generate skills from source
+ * Repositories to clone into `sources/` (git-ignored, see `scripts/cli.ts`) and generate skills from
  */
-export const submodules = {
+export const sources = {
   vue: 'https://github.com/vuejs/docs',
   nuxt: 'https://github.com/nuxt/nuxt',
   vite: 'https://github.com/vitejs/vite',
@@ -20,4 +20,6 @@ export const manual = [
   'antfu',
   'antfu-create-pr',
   'antfu-issue-triage',
+  'antfu-query',
+  'antfu-simplify',
 ]

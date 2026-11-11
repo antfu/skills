@@ -3,7 +3,7 @@ name: antfu-create-pr
 description: Create a reviewable GitHub pull request from the current branch with a Conventional Commits title, a concise evidence-based body, and before/after screenshots for UI changes. Use when asked to open, create, publish, or prepare a PR.
 metadata:
   author: Anthony Fu
-  version: "2026.10.09"
+  version: "2026.11.10"
 ---
 
 # Create Pull Request
@@ -19,7 +19,7 @@ Open a PR that a reviewer can understand from the body alone. Explain the change
 5. Run the checks that match the changed surfaces (focused tests, typecheck, lint). Record the exact commands and results.
 6. If the diff changes user-visible UI, capture before/after evidence. See [visual-evidence](references/visual-evidence.md).
 7. Review the commit history and reshape it into atomic Conventional Commits. See [Commits](#commits).
-8. Write the body to a temporary file. Push the branch. Create the PR with `gh pr create --title ... --body-file ...` (add `--attach` for each screenshot). Use `--draft` when checks are still running or the work is not review-ready.
+8. Write the body to a temporary file. Push the branch. Create the PR with `gh pr create --title ... --body-file ...` (add `--attach` for each screenshot; newer `gh` can upload local images and videos from the CLI, see [Attaching files with GitHub CLI](https://docs.github.com/en/github-cli/github-cli/attaching-files-with-github-cli)). Use `--draft` when checks are still running or the work is not review-ready.
 9. Open the created PR and verify title, base, head, rendered tables, diagrams, and images.
 10. Address review comments: fix each confirmed issue, run focused checks, push, reply with evidence, and resolve the thread.
 
@@ -63,8 +63,9 @@ feat: add task feature, fix sidebar, update deps, refactor utils
 Required in every PR:
 
 - `## Summary`: the problem or capability first, then what changed and why this approach. Mention if the PR is stacked and on what.
-- Linked issues: `closes #123` / `fixes #123` / `refs #123` so GitHub links and auto-closes.
-- `## Verification`: exact commands run and their results, plus anything left unverified.
+- Linked issues: one per line as a list item, e.g. `- close #123`, `- close #456`, so GitHub renders each as a pretty issue card and auto-closes it. Use `- refs #789` for issues that should stay open.
+- `## User prompts`: the model and harness in use, then a short summary of what the user asked for during the session, facts only. See [pr-body](references/pr-body.md#user-prompts).
+- `## Verification`: exact commands run and their results, plus anything left unverified. Show proof matched to the change type (bug: same input before and after; perf: same workload measured both sides; CLI: real output). See [Evidence by change type](references/pr-body.md#evidence-by-change-type).
 
 Optional, only when it helps the reviewer:
 
@@ -84,5 +85,12 @@ If the repo has a PR template, keep its headings and fill them; add sections abo
 - Use plain hyphens; never em dashes (U+2014) or en dashes (U+2013).
 - No filler ("This PR aims to...", "comprehensive", "robust"). Start sentences with the fact.
 - Do not paste tokens, secrets, user records, or full payloads into the body.
-- Do not commit screenshots or other PR-only artifacts to the repo; attach them with `gh --attach`.
-- If the PR was written with the help of an agent, say so in one line at the end of the body.
+- Do not commit screenshots or other PR-only artifacts to the repo; attach them with `gh --attach` (supported by newer `gh`, no manual upload needed).
+- A description conveys belief, not proof. Show the change working instead of only saying it works.
+- "Before" is what is live (base branch or production), never a faked revert. Check every capture; agents can screenshot the wrong page. Use demo or sanitized data only.
+- Security fixes: keep the description short and delay exploit details until release.
+- If the PR was written with the help of an agent, say so in one line at the end of the body: what the human contributed (gave the task, wrote the spec, shaped the solution) and whether they have reviewed the diff yet. If not, the reviewer is the first human to look.
+
+## Credits
+
+Evidence-by-type, honesty rules, and review-status disclosure are adapted from Hugo Richard's [What my pull requests look like now](https://hugorcd.com/writing/what-my-pull-requests-look-like-now).

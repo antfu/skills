@@ -5,7 +5,7 @@ description: Decision guide and templates for each PR body section. Summary and 
 
 # PR Body Template
 
-Pick sections by what the reviewer needs, not by what the template offers. Do not invent content to fill a heading. A small local change is a `Summary`, a `closes #N` line, and a `Verification` block.
+Pick sections by what the reviewer needs, not by what the template offers. Do not invent content to fill a heading. A small local change is a `Summary` (with its `- close #N` line), a `User prompts` block, and a `Verification` block.
 
 ## Summary
 
@@ -17,10 +17,49 @@ Lead with the problem or the capability, then the result and why this approach.
 Uploads over ~10MB failed silently because the client dropped the response body on a 413.
 This surfaces the error to the caller and retries once with chunked transfer.
 
-closes #482
+- close #482
 ```
 
+Closing issues: put each on its own line as a list item, `- close #123`, so GitHub renders them as pretty issue cards. Use `- refs #123` for issues the PR should not close.
+
+For a larger PR, end the Summary with a plain-language `In short:` line of two or three sentences for readers outside the module. It doubles as a check: if it makes no sense, the change probably doesn't either.
+
 For a stacked PR add a line such as `Stacked on #480; only the last two commits belong to this PR.`
+
+## User prompts
+
+Summarize what the user said during the session, so the reviewer can see the intent behind the change. Include only facts the user stated: requests, requirements, constraints, preferences, and corrections. Do not add the agent's interpretation, guesses, or reasoning. Paraphrase briefly, keep the order, and drop pleasantries and secrets.
+
+```markdown
+## User prompts
+
+- Model: `claude-sonnet-5-5`, harness: `Claude Code`
+- Asked to retry uploads that fail with 413.
+- Said the retry must happen at most once.
+- Corrected: surface the error in the CLI instead of logging it.
+```
+
+Start the section with one line naming the model and harness the agent ran on, as reported by the session itself (system prompt or environment). Do not guess; write `unknown` if it is not stated.
+
+If the user gave only one request, one bullet is enough.
+
+## Evidence by change type
+
+A description conveys belief, not proof. Show the change working instead of saying it works. Put the matching proof in `Verification` (or a dedicated `## Evidence` section for larger PRs).
+
+| Change | Evidence |
+| --- | --- |
+| Visible UI | Same page before and after, same size and crop; short video if it moves. See [visual-evidence](visual-evidence.md) |
+| Bug fix | Same input on both sides, plus the output each time |
+| Faster or cheaper | Same workload measured on both sides, more than once |
+| Command or build output | Real captured output before and after, never retyped |
+| New API | The code someone would write to use it |
+
+- "Before" is what is live (base branch, production, last deploy), never a faked revert.
+- Check every capture. Agents can confidently screenshot or measure the wrong thing.
+- Use demo or sanitized data only.
+- State what was not run, for example `Not checked in a browser yet.`
+- Security fixes are the exception: keep the description short and delay exploit details until release.
 
 ## Change map
 
@@ -112,4 +151,5 @@ Optional. Migrations, feature flags, staged rollout, monitoring, known gaps, req
 <!--
 Source references:
 - https://github.com/moeru-ai/airi/blob/main/.agents/skills/create-pr/references/pr-body.md
+- https://hugorcd.com/writing/what-my-pull-requests-look-like-now (Hugo Richard: evidence by change type, honesty rules, plain-language ending)
 -->

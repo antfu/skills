@@ -32,8 +32,10 @@ pnpm install --prefer-offline
 If you don't need optional deps:
 
 ```bash
-pnpm install --no-optional
+pnpm install --no-optional   # or `optional: false` in pnpm-workspace.yaml
 ```
+
+On pnpm 12, `--force` still skips optional deps built for other platforms unless `forceIgnoresPlatform: true`; prefer `supportedArchitectures` to install other platforms on purpose.
 
 ### Skip Scripts
 
@@ -68,11 +70,18 @@ Cache native module build results (enabled by default):
 sideEffectsCache: true
 ```
 
-This caches the results of postinstall scripts, speeding up subsequent installs.
+This caches the results of postinstall scripts, speeding up subsequent installs. Object form: `read`, `write`, `remote`, and `exclude` (v12.14.0) for packages whose build depends on things pnpm cannot key on, such as system libraries:
+
+```yaml title="pnpm-workspace.yaml"
+sideEffectsCache:
+  exclude: ['sharp@1.0.0 || 2.0.0', '@native/*']   # always built locally, never cached
+```
+
+Builds can also be shared across machines with `sideEffectsCache.remote` and the `remoteCache` setting (v12.12.0; a pnpr server or a Turborepo Remote Cache API server such as Vercel). Publishing and signing keys may only be set in global config or env.
 
 ### Global Virtual Store
 
-For many checkouts of the same repo (e.g. git worktrees / multiple agents), enable the global virtual store so each project's `node_modules` is just symlinks into one shared store — near-zero per-checkout cost. Auto-disabled in CI.
+For many checkouts of the same repo (e.g. git worktrees / multiple agents), enable the global virtual store so each project's `node_modules` is just symlinks into one shared store — near-zero per-checkout cost. Auto-disabled in CI. Only applies with `nodeLinker: isolated`; `pnpm dlx`/`pnx` do not use it.
 
 ```yaml title="pnpm-workspace.yaml"
 virtualStoreType: global
@@ -156,7 +165,7 @@ registries:
 fetchRetries: 3
 fetchRetryMintimeout: 10000
 fetchRetryMaxtimeout: 60000
-networkConcurrency: 16          # auto: clamp(workers x 3, 16, 64)
+networkConcurrency: 64          # auto: clamp(workers x 3, 64, 96)
 httpProxy: http://proxy.company.com:8080
 httpsProxy: http://proxy.company.com:8080
 ```
@@ -230,7 +239,7 @@ allowBuilds:
 
 # Network
 fetchRetries: 3
-networkConcurrency: 16
+networkConcurrency: 64
 
 # Workspace
 workspaceConcurrency: 4
