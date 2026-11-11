@@ -73,7 +73,7 @@ Generated from official documentation and fine-tuned by Anthony.
 
 ### What Makes This Collection Different?
 
-This collection is opinionated, but the key difference is that it uses git submodules to directly reference source documentation. This provides more reliable context and allows the skills to stay up-to-date with upstream changes over time.
+This collection is opinionated, but the key difference is that it clones the source documentation locally (into the git-ignored `sources/`) and generates skills directly from it. This provides more reliable context and allows the skills to stay up-to-date with upstream changes over time.
 
 The project is also designed to be flexible - you can use it as a template to generate your own skills collection.
 
@@ -92,8 +92,8 @@ Fork this project to create your own customized skill collection.
 1. Fork or clone this repository
 2. Install dependencies: `pnpm install`
 3. Update `meta.ts` with your own projects and skill sources
-4. Run `pnpm start cleanup` to remove existing submodules and skills
-5. Run `pnpm start init` to clone the submodules
+4. Run `pnpm start cleanup` to remove existing sources and skills
+5. Run `pnpm start init` to clone the sources
 6. Run `pnpm start sync` to pull the latest source docs
 7. Ask your agent to `Generate skills for \<project\>` (recommended one at a time to manage token usage)
 

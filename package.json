@@ -5,7 +5,7 @@
   "scripts": {
     "lint": "eslint .",
     "start": "node scripts/cli.ts",
-    "prepare": "simple-git-hooks && git submodule update --init --recursive && skills-npm"
+    "prepare": "simple-git-hooks && node scripts/cli.ts init -y && skills-npm"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.5.1",

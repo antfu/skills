@@ -15,7 +15,7 @@ There are two types of skill sources. The project lists are defined in `meta.ts`
 
 ### Type 1: Generated Skills (`sources/`)
 
-For OSS projects **without existing skills**. We clone the repo as a submodule and generate skills from their documentation.
+For OSS projects **without existing skills**. We clone the repo into `sources/` (git-ignored, not a git submodule) and generate skills from their documentation.
 
 - **Projects:** Vue, Nuxt, Vite, UnoCSS
 - **Workflow:** Read docs → Understand → Generate skills
@@ -55,19 +55,19 @@ You don't need to do anything about them unless being asked.
 
 #### Adding a New Project
 
-1. **Add entry to `meta.ts`** in the `submodules` object:
+1. **Add entry to `meta.ts`** in the `sources` object:
    ```ts
-   export const submodules = {
+   export const sources = {
      // ... existing entries
      'new-project': 'https://github.com/org/repo',
    }
    ```
 
-2. **Run sync script** to clone the submodule:
+2. **Run init script** to clone the source:
    ```bash
    nr start init -y
    ```
-   This will clone the repository to `sources/{project}/`
+   This clones the repository to `sources/{project}/`. Use `nr start sync` to pull the latest docs and `nr start check` to see which sources are behind.
 
 3. **Follow the generation guide** below to create the skills
 
