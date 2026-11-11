@@ -110,11 +110,13 @@ const { data } = await useAsyncData(
 // Dynamic keys for parameterized data
 const route = useRoute()
 const { data: post } = await useAsyncData(
-  `post-${route.params.id}`,
+  () => `post-${route.params.id}`,
   () => fetchPost(route.params.id),
 )
 </script>
 ```
+
+Keys identify the result, including any route, locale, or filter inputs. Use a getter or computed key when those inputs can change without remounting the component. A string built once in setup does not update with them. Prerendered pages can also share data by key, so route-dependent results need distinct keys.
 
 ## Handle Loading States Properly
 
@@ -274,18 +276,20 @@ function loadUser(id: string) {
 </script>
 ```
 
-## Server-only Fetching
+## SSR Fetching and Hydration Reuse
+
+`server: true` enables fetching during SSR. Nuxt reuses the payload during hydration, but a cache miss on client navigation can still fetch.
 
 ```vue
 <script setup lang="ts">
-// Only fetch on server, skip on client navigation
 const { data } = await useFetch('/api/static-content', {
   server: true,
   lazy: true,
-  getCachedData: (key, nuxtApp) => nuxtApp.payload.data[key],
 })
 </script>
 ```
+
+When providing `getCachedData`, define when cached entries expire and which refresh causes bypass them. With granular cached data enabled, the callback can run for watches and manual refreshes too; returning an old entry can prevent the handler from fetching fresh data. Return `undefined` for a cache miss.
 
 ## Error Handling
 

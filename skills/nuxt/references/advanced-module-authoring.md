@@ -342,7 +342,7 @@ declare module '#my-module' {
 import config from '#build/my-config.mjs'
 
 // In server routes
-import { config } from '#my-module/config.js'
+import { config } from '#my-module/config.mjs'
 ```
 
 ## Extending Pages and Routes
