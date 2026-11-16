@@ -3,7 +3,7 @@ name: antfu-create-pr
 description: Create a reviewable GitHub pull request from the current branch with a Conventional Commits title, a concise evidence-based body, and before/after screenshots for UI changes. Use when asked to open, create, publish, or prepare a PR.
 metadata:
   author: Anthony Fu
-  version: "2026.11.10"
+  version: "2026.11.16"
 ---
 
 # Create Pull Request
@@ -21,7 +21,19 @@ Open a PR that a reviewer can understand from the body alone. Explain the change
 7. Review the commit history and reshape it into atomic Conventional Commits. See [Commits](#commits).
 8. Write the body to a temporary file. Push the branch. Create the PR with `gh pr create --title ... --body-file ...` (add `--attach` for each screenshot; newer `gh` can upload local images and videos from the CLI, see [Attaching files with GitHub CLI](https://docs.github.com/en/github-cli/github-cli/attaching-files-with-github-cli)). Use `--draft` when checks are still running or the work is not review-ready.
 9. Open the created PR and verify title, base, head, rendered tables, diagrams, and images.
-10. Address review comments: fix each confirmed issue, run focused checks, push, reply with evidence, and resolve the thread.
+10. Check for merge conflicts (`gh pr view --json mergeable,mergeStateStatus`; `UNKNOWN` means retry after a few seconds). If conflicting, merge or rebase the base branch into the head, resolve the conflicts keeping both sides' intent, run the focused checks, and push. See [After creating](#after-creating).
+11. Watch CI with `gh run watch` and fix failures with follow-up commits. See [After creating](#after-creating).
+12. Address review comments: fix each confirmed issue, run focused checks, push, reply with evidence, and resolve the thread.
+
+## After creating
+
+Do not stop at `gh pr create`. Get the PR to a mergeable, green state.
+
+1. **Conflicts.** Check `mergeable` / `mergeStateStatus`. If `CONFLICTING` or `DIRTY`, bring the base branch in (`git fetch` then `git merge origin/<base>`; rebase only if the repo prefers it and the branch is not yet under review), resolve each conflict by keeping the intent of both sides, rerun the focused checks, and push. Never resolve by discarding the base side's changes without saying so.
+2. **CI.** Find the run for the pushed head (`gh run list --branch <head> --limit 1`), then `gh run watch <run-id> --exit-status`. If no run starts (workflows need approval or none apply), say so in the final report.
+3. **Failures.** On a failed run, read the failing logs (`gh run view <run-id> --log-failed`), reproduce locally with the same command, fix the root cause, and push a follow-up commit (Conventional Commits, e.g. `fix(scope): ...`). Do not amend or force-push commits already pushed. Then watch the new run.
+4. **Stop conditions.** Repeat for at most 3 fix rounds. Stop and report if the failure is flaky or unrelated to the diff (rerun once with `gh run rerun --failed`), needs secrets or access you do not have, or the fix would change the PR's scope. Never disable, skip, or weaken tests or lint rules just to get green.
+5. Update the `Verification` section if the follow-up commits change what was verified.
 
 ## Title
 
