@@ -22,7 +22,7 @@ Bump every dependency the project allows to its latest version with [taze](https
    - Migrating it requires changing this project's own public API, options, or defaults.
 
    For each user-facing major, ask the user with the question tool before upgrading. Give the breaking change, who it affects, and options: upgrade and accept the breaking change, upgrade with a compatibility shim, or skip it (add to `-x`). Recommend one. `devDependencies` and internal tooling are not user-facing; upgrade them without asking.
-6. **Upgrade.** Write the versions with `npx taze@latest major -r -w -x <skipped...>`, then install. taze leaves `peerDependencies` alone by default; keep it that way unless the user asks.
+6. **Upgrade.** Write the versions with `npx taze@latest major -r -w -x <skipped...>`, then install. taze leaves `peerDependencies` alone by default (no `--peer`). See [Peer dependencies](#peer-dependencies).
 7. **Migrate.** Apply the code changes from step 4 for every "affects us" item, following the official migration guide over guesses. Lint rule changes from an ESLint config upgrade count: run the lint fix script, then review what it changed.
 8. **Dedupe.** Run the dedupe command (`pnpm dedupe`, `yarn dedupe`, or `npm dedupe`), then install once more so the lockfile is stable.
 9. **Verify.** Run every check script from step 1 (lint, typecheck, test, build). Fix the root cause of each failure; never skip tests, loosen types, or disable lint rules to pass. If a failure comes from a regression in the new version that you cannot fix, revert that one dependency, record why, and report it. Done when all checks pass on the final lockfile.
@@ -31,6 +31,21 @@ Bump every dependency the project allows to its latest version with [taze](https
     - One commit per major that needed migration, e.g. `chore(deps): update vite to v8`, holding its bump and code changes together.
 
     In the PR body, add a table of major upgrades: package, from, to, changelog link, migration done, user-facing impact. List skipped and ignored dependencies with the reason.
+
+## Peer dependencies
+
+Widen peer ranges; keep the old majors in them. Raising the floor drops support for users still on the old major. Only the dev copy in `devDependencies` moves to the new version.
+
+When a peer releases a new major and the code works with it unchanged (all checks pass), append the new major to the range:
+
+```diff
+  "peerDependencies": {
+-   "vite": "^4.0.0-0"
++   "vite": "^4.0.0-0 || ^5.0.0-0"
+  }
+```
+
+If the code must change to support the new major, ask the user before dropping the old one. That is a breaking change for consumers.
 
 ## Rules
 
