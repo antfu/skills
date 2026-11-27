@@ -22,4 +22,5 @@ export const manual = [
   'antfu-issue-triage',
   'antfu-query',
   'antfu-simplify',
+  'antfu-upgrade-deps',
 ]
